@@ -2,7 +2,6 @@ package com.jake.messagesystem.service;
 
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.MaskingCallback;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
@@ -32,29 +31,30 @@ public class TerminalService {
     }
 
     /**
-     * 입력 줄을 읽되, echo는 남기지 않는다.
+     * 입력 줄을 읽되, 사용자가 친 입력은 화면에 남지 않는다.
      */
     public String readLine(String prompt) {
-        return lineReader.readLine(prompt, null, (MaskingCallback) null, null);
+        String input = lineReader.readLine(prompt, (char) 0);
+
+        // ✅ 입력 줄 지우기
+        terminal.puts(org.jline.utils.InfoCmp.Capability.cursor_up);
+        terminal.puts(org.jline.utils.InfoCmp.Capability.delete_line);
+        terminal.flush();
+
+        return input;
     }
 
-    /**
-     * 일반 메시지 출력 (입력창 위에 쌓임).
-     */
+    /** 일반 메시지 출력 (입력창 위에 쌓임). */
     public void printMessage(String username, String content) {
         lineReader.printAbove(String.format("%s : %s", username, content));
     }
 
-    /**
-     * 시스템 메시지 출력 (입력창 위에 쌓임).
-     */
+    /** 시스템 메시지 출력 (입력창 위에 쌓임). */
     public void printSystemMessage(String content) {
         lineReader.printAbove("=> " + content);
     }
 
-    /**
-     * 터미널 전체 클리어.
-     */
+    /** 터미널 전체 클리어. */
     public void clearTerminal() {
         terminal.puts(org.jline.utils.InfoCmp.Capability.clear_screen);
         terminal.flush();

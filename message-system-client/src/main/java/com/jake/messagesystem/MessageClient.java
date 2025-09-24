@@ -18,12 +18,8 @@ public class MessageClient {
         while (true) {
             String input = terminalService.readLine("Enter message: ");
 
-            if (input == null || input.isBlank()) {
-                continue;
-            }
-
-            if (input.charAt(0) == '/') {
-                String command = input.substring(1);
+            if (!input.isEmpty() && input.charAt(0) == '/') {
+                String command = input.substring(1).trim();
 
                 switch (command) {
                     case "exit":
@@ -37,7 +33,7 @@ public class MessageClient {
                         terminalService.printSystemMessage("알 수 없는 명령어: " + command);
                 }
             } else {
-                terminalService.printMessage("나", input);
+                terminalService.printMessage("test", input.trim());
             }
         }
     }
