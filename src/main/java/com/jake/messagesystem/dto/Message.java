@@ -1,4 +1,4 @@
 package com.jake.messagesystem.dto;
 
-public record Message(String content) {
+public record Message(String username, String content) {
 }
