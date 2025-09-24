@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.jake'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.jline:jline-terminal:3.28.0'
+    implementation 'org.jline:jline-reader:3.28.0'
+    implementation 'org.glassfish.tyrus-client:2.2.0'
+    implementation 'org.glassfish.tyrus-container-grizzly-client:2.2.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+}
+
+test {
+    useJUnitPlatform()
+}
