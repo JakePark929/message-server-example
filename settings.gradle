@@ -4,4 +4,6 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = 'message-system'
+rootProject.name = "message-system"
+
+include("message-system-server", "message-system-client")
