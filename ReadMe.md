@@ -1,12 +1,45 @@
-# WebSocket 기반 메세지 서버 구현
+# WebSocket 기반 메세지 서버
 
-## Tech Stack
-- Java 17.0.13 (Eclipse Temurin)
-- SpringBoot 3.4.11(LTS)
-- WebSocket
-- Spock 4
+웹소켓 기반 멀티모듈 메세지 시스템 프로젝트 입니다.
+CLI 클라이언트와 서버로 구성되어 있습니다.
 
-## 메세징 서버 관련 지식
+## 🧑‍💻 Tech Stack
+|   구분   | 기술명                                                               |
+|:------:|:------------------------------------------------------------------|
+| Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine) |
+| Server | - SpringBoot 3.4.11(LTS) <br/> - WebSocket                        |
+| Common | - Java 17.0.13 (Eclipse Temurin) <br/> - Spock 4 (테스트 프레임워크)      |
+
+> Tyrus = Jakarta WebSocket(JSR 356)의 표준 구현체
+
+## 🗂️ 프로젝트 구조
+
+```
+message-system/
+├── message-system-client/ # 클라이언트 모듈
+│ ├── data/
+│ │ └── history.txt # 클라이언트 메시지 히스토리 저장
+│ └── src/
+│ ├── main/java/com/jake/messagesystem/
+│ │ ├── dto/ # 데이터 전송 객체 (DTO)
+│ │ ├── handler/ # 이벤트/메시지 핸들러
+│ │ ├── service/ # 서비스 계층
+│ │ ├── util/ # 유틸리티 클래스
+│ │ └── MessageClient.java # 클라이언트 실행 진입점
+│
+├── message-system-server/ # 서버 모듈
+│ └── src/
+│ ├── main/java/com/jake/messagesystem/
+│ │ ├── config/ # 서버 설정
+│ │ ├── dto/ # 데이터 전송 객체 (DTO)
+│ │ ├── handler/ # WebSocket 등 핸들러
+│ │ ├── session/ # 세션 관리 로직
+│ │ └── MessageSystemApplication.java # 서버 실행 진입점
+│ └── resources/ # 리소스 파일
+│ └── test/ # 테스트 코드
+```
+
+## 📖 메세징 서버 관련 지식
 
 > 브로드캐스트 : 농사할 때 씨앗을 밭에 흩뿌리는 모습   
 > 농사 -> 라디오, 방송 -> IT로 용어가 전파됨
@@ -19,5 +52,6 @@
 |  메세지 전달   |       논리적으로 한 번의 브로드 캐스트 <br/> 네트워크 내 모든 호스트 패킷 전파       |                    각 클라이언트 소켓으로 유니캐스트 <br/> 개별 전송 반복                     |
 |   사용 예    |                       ARP, DHCP 등                        |                           그룹 채팅 메세지, 알림 시스템 등                            |
 
-> ARP(Address Resolution Protocol) : 특정 Host IP를 알지만 MAC Address 를 모를때 ARP 패킷 전파, IP 로 MAC Address 를 알 수 있음 (+RARP : MAC Address 를 알 때, RARP로 IP 주소 할당, 지금은 DHCP가 대체)  
-> DHCP(Dynamic Host Configuration Protocol) : 네트워크 내 DHCP 서버가 IP 주소와 관련 네트워크 설정을 자동으로 클라이언트에 할당해 주는 프로토콜 (공유기/라우터 등에 내장)   
+> - ARP(Address Resolution Protocol) : 특정 Host IP를 알지만 MAC Address 를 모를때 ARP 패킷 전파,  
+>   IP 로 MAC Address 를 알 수 있음 (+RARP : MAC Address 를 알 때, RARP로 IP 주소 할당, 지금은 DHCP가 대체)  
+> - DHCP(Dynamic Host Configuration Protocol) : 네트워크 내 DHCP 서버가 IP 주소와 관련 네트워크 설정을 자동으로 클라이언트에 할당해 주는 프로토콜 (공유기/라우터 등에 내장)   

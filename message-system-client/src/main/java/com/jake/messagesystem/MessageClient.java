@@ -1,9 +1,16 @@
 package com.jake.messagesystem;
 
+import com.jake.messagesystem.dto.Message;
+import com.jake.messagesystem.handler.WebSocketMessageHandler;
+import com.jake.messagesystem.handler.WebSocketSender;
 import com.jake.messagesystem.service.TerminalService;
+import com.jake.messagesystem.service.WebSocketService;
 
 public class MessageClient {
     public static void main(String[] args) {
+        final String WEBSOCKET_BASE_URL = "localhost:8080";
+        final String WEBSOCKET_ENDPOINT = "/ws/v1/message";
+
         TerminalService terminalService;
 
         try {
@@ -13,6 +20,10 @@ public class MessageClient {
             return;
         }
 
+        WebSocketSender webSocketSender = new WebSocketSender(terminalService);
+        WebSocketService webSocketService = new WebSocketService(terminalService, webSocketSender, WEBSOCKET_BASE_URL, WEBSOCKET_ENDPOINT);
+        webSocketService.setWebSocketMessageHandler(new WebSocketMessageHandler(terminalService));
+
         terminalService.printSystemMessage("채팅 클라이언트 시작! /exit 로 종료, /clear 로 화면 지우기");
 
         while (true) {
@@ -21,19 +32,33 @@ public class MessageClient {
             if (!input.isEmpty() && input.charAt(0) == '/') {
                 String command = input.substring(1).trim();
 
-                switch (command) {
-                    case "exit":
-                        terminalService.printSystemMessage("종료합니다.");
-                        return;
-                    case "clear":
+                boolean exit = switch (command) {
+                    case "exit" -> {
+                        webSocketService.closeSession();
+                        yield true;
+                    }
+
+                    case "clear" -> {
                         terminalService.clearTerminal();
-                        terminalService.printSystemMessage("화면 초기화 완료");
-                        break;
-                    default:
-                        terminalService.printSystemMessage("알 수 없는 명령어: " + command);
+                        yield false;
+                    }
+
+                    case "connect" -> {
+                        webSocketService.createSession();
+                        yield false;
+                    }
+
+                    default -> {
+                        yield false;
+                    }
+                };
+
+                if (exit) {
+                    break;
                 }
-            } else {
-                terminalService.printMessage("test", input.trim());
+            } else if (!input.isEmpty()) {
+                terminalService.printMessage("<me>", input.trim());
+                webSocketService.sendMessage(new Message("test client", input));
             }
         }
     }
