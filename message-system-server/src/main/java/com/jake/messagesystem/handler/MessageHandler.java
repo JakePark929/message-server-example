@@ -2,6 +2,8 @@ package com.jake.messagesystem.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jake.messagesystem.dto.Message;
+import com.jake.messagesystem.entity.MessageEntity;
+import com.jake.messagesystem.repository.MessageRepository;
 import com.jake.messagesystem.session.WebSocketSessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +20,11 @@ public class MessageHandler extends TextWebSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(MessageHandler.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final WebSocketSessionManager webSocketSessionManager;
+    private final MessageRepository messageRepository;
 
-    public MessageHandler(WebSocketSessionManager webSocketSessionManager) {
+    public MessageHandler(WebSocketSessionManager webSocketSessionManager, MessageRepository messageRepository) {
         this.webSocketSessionManager = webSocketSessionManager;
+        this.messageRepository = messageRepository;
     }
 
     @Override
@@ -53,6 +57,9 @@ public class MessageHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         try {
             Message recievedMessage = objectMapper.readValue(payload, Message.class);
+
+            messageRepository.save(new MessageEntity(recievedMessage.username(), recievedMessage.content()));
+
             webSocketSessionManager.getSessions().forEach(participantSession -> {
                 if (!senderSession.getId().equals(participantSession.getId())) {
                     sendMessage(participantSession, recievedMessage);
