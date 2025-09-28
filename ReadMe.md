@@ -1,14 +1,15 @@
 # WebSocket 기반 메세지 서버
 
-웹소켓 기반 멀티모듈 메세지 시스템 프로젝트 입니다.
-CLI 클라이언트와 서버로 구성되어 있습니다.
+웹소켓 기반 멀티모듈 메세지 시스템 프로젝트 입니다.  
+CLI 클라이언트와 웹소켓 서버로 구성되어 있습니다.
 
 ## 🧑‍💻 Tech Stack
 |   구분   | 기술명                                                               |
 |:------:|:------------------------------------------------------------------|
+| Common | - Java 17.0.13 (Eclipse Temurin) <br/> - Spock 4 (테스트 프레임워크)      |
 | Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine) |
 | Server | - SpringBoot 3.4.11(LTS) <br/> - WebSocket                        |
-| Common | - Java 17.0.13 (Eclipse Temurin) <br/> - Spock 4 (테스트 프레임워크)      |
+| Infra  | - MySQL 8.0.40 (RDB) <br/>                                        |
 
 > Tyrus = Jakarta WebSocket(JSR 356)의 표준 구현체
 
