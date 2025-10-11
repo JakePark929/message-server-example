@@ -1,5 +1,10 @@
 package com.jake.messagesystem.auth;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -7,12 +12,19 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MessageUserDetails implements UserDetails {
     private final Long userId;
     private final String username;
-    private final String password;
+    private String password;
 
-    public MessageUserDetails(Long userId, String username, String password) {
+    @JsonCreator
+    public MessageUserDetails(
+            @JsonProperty("userId") Long userId,
+            @JsonProperty("username") String username,
+            @JsonProperty("password") String password
+    ) {
         this.userId = userId;
         this.username = username;
         this.password = password;
@@ -20,6 +32,10 @@ public class MessageUserDetails implements UserDetails {
 
     public Long getUserId() {
         return userId;
+    }
+
+    public void erasePassword() {
+        password = "";
     }
 
     @Override
@@ -33,6 +49,7 @@ public class MessageUserDetails implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
     }

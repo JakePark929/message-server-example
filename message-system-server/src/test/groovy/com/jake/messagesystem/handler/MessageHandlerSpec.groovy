@@ -9,6 +9,7 @@ import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketHttpHeaders
@@ -22,6 +23,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 
 @SpringBootTest(classes = MessageSystemApplication, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 class MessageHandlerSpec extends Specification {
     @LocalServerPort
     int port
