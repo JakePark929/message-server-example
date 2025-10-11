@@ -4,12 +4,12 @@
 CLI 클라이언트와 웹소켓 서버로 구성되어 있습니다.
 
 ## 🧑‍💻 Tech Stack
-|   구분   | 기술명                                                               |
-|:------:|:------------------------------------------------------------------|
-| Common | - Java 17.0.13 (Eclipse Temurin) <br/> - Spock 4 (테스트 프레임워크)      |
-| Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine) |
-| Server | - SpringBoot 3.4.11(LTS) <br/> - WebSocket                        |
-| Infra  | - MySQL 8.0.40 (RDB) <br/>                                        |
+|   구분   | 기술명                                                                |
+|:------:|:-------------------------------------------------------------------|
+| Common | - Java 17.0.13 (Eclipse Temurin) <br/> - Spock 4 (테스트 프레임워크)       |
+| Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine)  |
+| Server | - SpringBoot 3.4.11(LTS) <br/> - Spring Security <br/> - WebSocket |
+| Infra  | - MySQL 8.0.40 (RDB) <br/> - Redis 7.4.1                           |
 
 > Tyrus = Jakarta WebSocket(JSR 356)의 표준 구현체
 
