@@ -6,6 +6,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -19,8 +21,11 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class RestApiLoginAuthFilter extends AbstractAuthenticationProcessingFilter {
+    private final static Logger log = LoggerFactory.getLogger(RestApiLoginAuthFilter.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RestApiLoginAuthFilter(RequestMatcher requiresAuthenticationRequestMatcher, AuthenticationManager authenticationManager) {
@@ -28,8 +33,8 @@ public class RestApiLoginAuthFilter extends AbstractAuthenticationProcessingFilt
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
-        if (request.getContentType().startsWith(MediaType.APPLICATION_JSON_VALUE)) {
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException {
+        if (!request.getContentType().startsWith(MediaType.APPLICATION_JSON_VALUE)) {
             throw new AuthenticationServiceException("지원하지 않는 타입 : " + request.getContentType());
         }
 
@@ -47,9 +52,12 @@ public class RestApiLoginAuthFilter extends AbstractAuthenticationProcessingFilt
         final HttpSessionSecurityContextRepository contextRepository = new HttpSessionSecurityContextRepository();
         contextRepository.saveContext(securityContext, request, response);
 
+        final String sessionId = request.getSession().getId();
+        final String encodedSessionId = Base64.getEncoder().encodeToString(sessionId.getBytes(StandardCharsets.UTF_8));
+
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(MediaType.TEXT_PLAIN_VALUE);
-        response.getWriter().write(request.getSession().getId());
+        response.getWriter().write(encodedSessionId);
         response.getWriter().flush();
     }
 
