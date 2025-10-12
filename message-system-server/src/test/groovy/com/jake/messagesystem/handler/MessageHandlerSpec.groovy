@@ -2,7 +2,7 @@ package com.jake.messagesystem.handler
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jake.messagesystem.MessageSystemApplication
-import com.jake.messagesystem.dto.websocket.inbound.MessageRequest
+import com.jake.messagesystem.dto.websocket.outbound.MessageRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort

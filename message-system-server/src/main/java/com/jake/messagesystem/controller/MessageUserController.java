@@ -1,6 +1,6 @@
 package com.jake.messagesystem.controller;
 
-import com.jake.messagesystem.dto.req.UserRegisterRequest;
+import com.jake.messagesystem.dto.rest.req.UserRegisterRequest;
 import com.jake.messagesystem.service.MessageUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;

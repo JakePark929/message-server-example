@@ -8,7 +8,7 @@ import com.jake.messagesystem.service.WebSocketService;
 
 public class MessageClient {
     public static void main(String[] args) {
-        final String WEBSOCKET_BASE_URL = "localhost:8080";
+        final String BASE_URL = "localhost:8080";
         final String WEBSOCKET_ENDPOINT = "/ws/v1/message";
 
         TerminalService terminalService;
@@ -21,7 +21,7 @@ public class MessageClient {
         }
 
         WebSocketSender webSocketSender = new WebSocketSender(terminalService);
-        WebSocketService webSocketService = new WebSocketService(terminalService, webSocketSender, WEBSOCKET_BASE_URL, WEBSOCKET_ENDPOINT);
+        WebSocketService webSocketService = new WebSocketService(terminalService, webSocketSender, BASE_URL, WEBSOCKET_ENDPOINT);
         webSocketService.setWebSocketMessageHandler(new WebSocketMessageHandler(terminalService));
 
         terminalService.printSystemMessage("채팅 클라이언트 시작! /exit 로 종료, /clear 로 화면 지우기");

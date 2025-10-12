@@ -1,7 +1,7 @@
 package com.jake.messagesystem.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jake.messagesystem.dto.req.LoginRequest;
+import com.jake.messagesystem.dto.rest.req.LoginRequest;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
