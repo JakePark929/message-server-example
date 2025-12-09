@@ -5,20 +5,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
 @Table(name="message")
-public class MessageEntity {
+public class MessageEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "message_sequence", nullable = false)
+    @Column(name = "message_sequence")
     private Long messageSequence;
 
     @Column(name = "user_name", nullable = false)
@@ -26,12 +23,6 @@ public class MessageEntity {
 
     @Column(name = "content", nullable = false)
     private String content;
-
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     public MessageEntity() {
     }
@@ -53,25 +44,6 @@ public class MessageEntity {
         return content;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    @PrePersist
-    public void PrePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
-    }
-
-    @PreUpdate
-    public void PreUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -86,6 +58,6 @@ public class MessageEntity {
 
     @Override
     public String toString() {
-        return "MessageEntity{messageSequence=%d, username='%s', content='%s', createdAt=%s, updatedAt=%s}".formatted(messageSequence, username, content, createdAt, updatedAt);
+        return "MessageEntity{messageSequence=%d, username='%s', content='%s', createdAt=%s, updatedAt=%s}".formatted(messageSequence, username, content, getCreatedAt(), getUpdatedAt());
     }
 }

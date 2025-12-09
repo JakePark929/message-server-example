@@ -1,5 +1,6 @@
 package com.jake.messagesystem.config;
 
+import com.jake.messagesystem.auth.WebSocketHttpSessionHandshakeInterceptor;
 import com.jake.messagesystem.handler.MessageHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -10,13 +11,17 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @EnableWebSocket
 public class WebSocketHandlerConfig implements WebSocketConfigurer {
     private final MessageHandler messageHandler;
+    private final WebSocketHttpSessionHandshakeInterceptor webSocketHttpSessionHandshakeInterceptor;
 
-    public WebSocketHandlerConfig(MessageHandler messageHandler) {
+    public WebSocketHandlerConfig(MessageHandler messageHandler, WebSocketHttpSessionHandshakeInterceptor webSocketHttpSessionHandshakeInterceptor) {
         this.messageHandler = messageHandler;
+        this.webSocketHttpSessionHandshakeInterceptor = webSocketHttpSessionHandshakeInterceptor;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(messageHandler, "/ws/v1/message").setAllowedOrigins("*");
+        registry
+            .addHandler(messageHandler, "/ws/v1/message")
+            .addInterceptors(webSocketHttpSessionHandshakeInterceptor);
     }
 }
