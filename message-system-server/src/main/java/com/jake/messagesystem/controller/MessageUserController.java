@@ -1,7 +1,7 @@
 package com.jake.messagesystem.controller;
 
 import com.jake.messagesystem.dto.rest.req.UserRegisterRequest;
-import com.jake.messagesystem.service.MessageUserService;
+import com.jake.messagesystem.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,16 +17,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class MessageUserController {
     private static final Logger log = LoggerFactory.getLogger(MessageUserController.class);
 
-    private final MessageUserService messageUserService;
+    private final UserService userService;
 
-    public MessageUserController(MessageUserService messageUserService) {
-        this.messageUserService = messageUserService;
+    public MessageUserController(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody UserRegisterRequest request) {
         try {
-            messageUserService.addUser(request.username(), request.password());
+            userService.addUser(request.username(), request.password());
 
             return ResponseEntity.ok("User registered.");
         } catch (Exception e) {
@@ -39,7 +39,7 @@ public class MessageUserController {
     @PostMapping("/unregister")
     public ResponseEntity<String> unregister(HttpServletRequest request) {
         try {
-            messageUserService.removeUser();
+            userService.removeUser();
             request.getSession().invalidate();
 
             return ResponseEntity.ok("User unregistered.");
