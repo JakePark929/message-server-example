@@ -25,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class RestApiLoginAuthFilter extends AbstractAuthenticationProcessingFilter {
-    private final static Logger log = LoggerFactory.getLogger(RestApiLoginAuthFilter.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RestApiLoginAuthFilter(RequestMatcher requiresAuthenticationRequestMatcher, AuthenticationManager authenticationManager) {

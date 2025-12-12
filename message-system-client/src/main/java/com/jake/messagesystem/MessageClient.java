@@ -1,6 +1,6 @@
 package com.jake.messagesystem;
 
-import com.jake.messagesystem.dto.websocket.outbound.MessageRequest;
+import com.jake.messagesystem.dto.websocket.inbound.MessageRequest;
 import com.jake.messagesystem.handler.CommandHandler;
 import com.jake.messagesystem.handler.WebSocketMessageHandler;
 import com.jake.messagesystem.handler.WebSocketSender;

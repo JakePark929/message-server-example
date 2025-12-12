@@ -1,6 +1,6 @@
 package com.jake.messagesystem.handler;
 
-import com.jake.messagesystem.dto.websocket.outbound.MessageRequest;
+import com.jake.messagesystem.dto.websocket.inbound.MessageRequest;
 import com.jake.messagesystem.service.TerminalService;
 import com.jake.messagesystem.util.JsonUtil;
 import jakarta.websocket.Session;

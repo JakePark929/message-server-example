@@ -1,8 +1,8 @@
 package com.jake.messagesystem.service;
 
-import com.jake.messagesystem.dto.websocket.outbound.BaseRequest;
-import com.jake.messagesystem.dto.websocket.outbound.KeepAliveRequest;
-import com.jake.messagesystem.dto.websocket.outbound.MessageRequest;
+import com.jake.messagesystem.dto.websocket.inbound.BaseRequest;
+import com.jake.messagesystem.dto.websocket.inbound.KeepAliveRequest;
+import com.jake.messagesystem.dto.websocket.inbound.MessageRequest;
 import com.jake.messagesystem.handler.WebSocketMessageHandler;
 import com.jake.messagesystem.handler.WebSocketSender;
 import com.jake.messagesystem.handler.WebSocketSessionHandler;
