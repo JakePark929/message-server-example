@@ -1,16 +1,16 @@
-package com.jake.messagesystem.dto.websocket.outbound;
+package com.jake.messagesystem.dto.websocket.inbound;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jake.messagesystem.constants.MessageType;
 
-public class MessageRequest extends BaseRequest {
+public class WriteMessageRequest extends BaseRequest {
     private final String username;
     private final String content;
 
     @JsonCreator
-    public MessageRequest(@JsonProperty("username") String username, @JsonProperty("content") String content) {
-        super(MessageType.MESSAGE);
+    public WriteMessageRequest(@JsonProperty("username") String username, @JsonProperty("content") String content) {
+        super(MessageType.WRITE_MESSAGE);
         this.username = username;
         this.content = content;
     }

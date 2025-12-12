@@ -1,4 +1,4 @@
-package com.jake.messagesystem.dto.websocket.outbound;
+package com.jake.messagesystem.dto.websocket.inbound;
 
 import com.jake.messagesystem.constants.MessageType;
 
