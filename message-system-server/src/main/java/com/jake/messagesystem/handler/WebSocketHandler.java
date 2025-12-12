@@ -17,14 +17,14 @@ import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorato
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Component
-public class MessageHandler extends TextWebSocketHandler {
-    private static final Logger log = LoggerFactory.getLogger(MessageHandler.class);
+public class WebSocketHandler extends TextWebSocketHandler {
+    private static final Logger log = LoggerFactory.getLogger(WebSocketHandler.class);
 
     private final JsonUtil jsonUtil;
     private final WebSocketSessionManager webSocketSessionManager;
     private final RequestHandlerDispatcher requestHandlerDispatcher;
 
-    public MessageHandler(JsonUtil jsonUtil, WebSocketSessionManager webSocketSessionManager, RequestHandlerDispatcher requestHandlerDispatcher) {
+    public WebSocketHandler(JsonUtil jsonUtil, WebSocketSessionManager webSocketSessionManager, RequestHandlerDispatcher requestHandlerDispatcher) {
         this.jsonUtil = jsonUtil;
         this.webSocketSessionManager = webSocketSessionManager;
         this.requestHandlerDispatcher = requestHandlerDispatcher;

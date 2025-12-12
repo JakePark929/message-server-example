@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
 
 @SpringBootTest(classes = MessageSystemApplication, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-class MessageHandlerSpec extends Specification {
+class WebSocketHandlerSpec extends Specification {
     @LocalServerPort
     int port
 
