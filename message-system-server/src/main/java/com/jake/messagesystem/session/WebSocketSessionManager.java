@@ -1,7 +1,7 @@
 package com.jake.messagesystem.session;
 
-import com.jake.messagesystem.dto.Message;
 import com.jake.messagesystem.dto.UserId;
+import com.jake.messagesystem.dto.websocket.outbound.BaseMessage;
 import com.jake.messagesystem.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ public class WebSocketSessionManager {
         }
     }
 
-    public void sendMessage(WebSocketSession session, Message message) {
+    public void sendMessage(WebSocketSession session, BaseMessage message) {
         jsonUtil.toJson(message).ifPresent(msg -> {
             try {
                 session.sendMessage(new TextMessage(msg));

@@ -1,7 +1,7 @@
 package com.jake.messagesystem.handler.websocket;
 
-import com.jake.messagesystem.dto.Message;
 import com.jake.messagesystem.dto.websocket.inbound.WriteMessageRequest;
+import com.jake.messagesystem.dto.websocket.outbound.MessageNotification;
 import com.jake.messagesystem.entity.MessageEntity;
 import com.jake.messagesystem.repository.MessageRepository;
 import com.jake.messagesystem.session.WebSocketSessionManager;
@@ -20,12 +20,12 @@ public class WriteMessageRequestHandler implements BaseRequestHandler<WriteMessa
 
     @Override
     public void handleRequest(WebSocketSession senderSession, WriteMessageRequest request) {
-        Message recievedMessage = new Message(request.getUsername(), request.getContent());
-        messageRepository.save(new MessageEntity(recievedMessage.username(), recievedMessage.content()));
+        MessageNotification receivedMessage = new MessageNotification(request.getUsername(), request.getContent());
+        messageRepository.save(new MessageEntity(receivedMessage.getUsername(), receivedMessage.getContent()));
 
         webSocketSessionManager.getSessions().forEach(participantSession -> {
             if (!senderSession.getId().equals(participantSession.getId())) {
-                webSocketSessionManager.sendMessage(participantSession, recievedMessage);
+                webSocketSessionManager.sendMessage(participantSession, receivedMessage);
             }
         });
     }

@@ -33,7 +33,7 @@ public class UserConnectionService {
         if (partner.isEmpty()) {
             log.info("Invalid invite code. {}, from {}", inviteCode, inviterUserId);
 
-            return Pair.of(Optional.empty(), "Invalid invite code");
+            return Pair.of(Optional.empty(), "Invalid invite code.");
         }
 
         final UserId partnerUserId = partner.get().userId();
@@ -65,11 +65,11 @@ public class UserConnectionService {
                 }
             }
 
-            case ACCEPTED -> Pair.of(Optional.empty(), "Already connected with " + partnerUsername);
+            case ACCEPTED -> Pair.of(Optional.of(partnerUserId), "Already connected with " + partnerUsername);
 
             case PENDING, REJECTED -> {
                 log.info("{} invites {} but does not deliver the invitation request.", inviterUserId, partnerUsername);
-                yield Pair.of(Optional.empty(), "Already connected with " + partnerUsername);
+                yield Pair.of(Optional.of(partnerUserId), "Already Invited to " + partnerUsername);
             }
         };
     }
