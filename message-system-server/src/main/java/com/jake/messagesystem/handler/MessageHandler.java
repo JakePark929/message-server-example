@@ -60,9 +60,7 @@ public class MessageHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         log.info("Received TextMessage: [{}] from {}", payload, senderSession.getId());
 
-        jsonUtil.fromJson(payload, BaseRequest.class).ifPresent(msg -> {
-            requestHandlerDispatcher.dispatchRequest(senderSession, msg);
-        });
+        jsonUtil.fromJson(payload, BaseRequest.class).ifPresent(msg -> requestHandlerDispatcher.dispatchRequest(senderSession, msg));
     }
 
 
