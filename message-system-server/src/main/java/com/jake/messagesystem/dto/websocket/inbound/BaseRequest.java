@@ -9,6 +9,7 @@ import com.jake.messagesystem.constants.MessageType;
         @JsonSubTypes.Type(value = FetchUserInviteCodeRequest.class, name = MessageType.FETCH_USER_INVITE_CODE_REQUEST),
         @JsonSubTypes.Type(value = InviteRequest.class, name = MessageType.INVITE_REQUEST),
         @JsonSubTypes.Type(value = AcceptRequest.class, name = MessageType.ACCEPT_REQUEST),
+        @JsonSubTypes.Type(value = RejectRequest.class, name = MessageType.REJECT_REQUEST),
         @JsonSubTypes.Type(value = WriteMessageRequest.class, name = MessageType.WRITE_MESSAGE),
         @JsonSubTypes.Type(value = KeepAliveRequest.class, name = MessageType.KEEP_ALIVE)
 })

@@ -125,6 +125,24 @@ public class UserConnectionService {
         }
     }
 
+    public Pair<Boolean, String> reject(UserId senderUserId, String inviterUsername) {
+        return userService.getUserId(inviterUsername)
+                .filter(inviterUserId -> !inviterUserId.equals(senderUserId))
+                .filter(inviterUserId -> getInviterUserId(inviterUserId, senderUserId).filter(invitationSenderUserId -> invitationSenderUserId.equals(inviterUserId)).isPresent())
+                .filter(inviterUserId -> getStatus(inviterUserId, senderUserId) == UserConnectionStatus.PENDING)
+                .map(inviterUserId -> {
+                    try {
+                        setStatus(inviterUserId, senderUserId, UserConnectionStatus.REJECTED);
+
+                        return Pair.of(true, inviterUsername);
+                    } catch (Exception e) {
+                        log.error("Set rejected failed. cause: {}", e.getMessage());
+
+                        return Pair.of(false, "Reject failed.");
+                    }
+                }).orElse(Pair.of(false, "Reject failed."));
+    }
+
     private Optional<UserId> getInviterUserId(UserId partnerAUserId, UserId partnerBUserId) {
         return userConnectionRepository.findInviterUserIdByPartnerAUserIdAndPartnerBUserId(
                 Long.min(partnerAUserId.id(), partnerBUserId.id()),
