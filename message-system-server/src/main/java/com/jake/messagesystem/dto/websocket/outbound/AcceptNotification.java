@@ -1,0 +1,16 @@
+package com.jake.messagesystem.dto.websocket.outbound;
+
+import com.jake.messagesystem.constants.MessageType;
+
+public class AcceptNotification extends BaseMessage {
+    private final String username;
+
+    public AcceptNotification(String username) {
+        super(MessageType.NOTIFY_ACCEPT);
+        this.username = username;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+}

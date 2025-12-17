@@ -25,7 +25,7 @@ public class UserEntity extends BaseEntity {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "connection_invite_code", nullable = false)
+    @Column(name = "connect_invite_code", nullable = false)
     private String connectionInviteCode;
 
     @Column(name = "connection_count", nullable = false)

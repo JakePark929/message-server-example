@@ -6,6 +6,7 @@ import com.jake.messagesystem.dto.User;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.entity.UserConnectionEntity;
 import com.jake.messagesystem.repository.UserConnectionRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
@@ -20,10 +21,12 @@ public class UserConnectionService {
 
     private final UserService userService;
     private final UserConnectionRepository userConnectionRepository;
+    private final UserConnectionLimitService userConnectionLimitService;
 
-    public UserConnectionService(UserService userService, UserConnectionRepository userConnectionRepository) {
+    public UserConnectionService(UserService userService, UserConnectionRepository userConnectionRepository, UserConnectionLimitService userConnectionLimitService) {
         this.userService = userService;
         this.userConnectionRepository = userConnectionRepository;
+        this.userConnectionLimitService = userConnectionLimitService;
     }
 
     @Transactional
@@ -72,6 +75,57 @@ public class UserConnectionService {
                 yield Pair.of(Optional.of(partnerUserId), "Already Invited to " + partnerUsername);
             }
         };
+    }
+
+    public Pair<Optional<UserId>, String> accept(UserId acceptorUserId, String inviterUsername) {
+        final Optional<UserId> userId = userService.getUserId(inviterUsername);
+        if (userId.isEmpty()) {
+            return Pair.of(Optional.empty(), "Invalid username.");
+        }
+
+        UserId inviterUserId = userId.get();
+        if (acceptorUserId.equals(inviterUserId)) {
+            return Pair.of(Optional.empty(), "Can't self accept.");
+        }
+
+        if (getInviterUserId(acceptorUserId, inviterUserId).filter(invitationSenderUserId -> invitationSenderUserId.equals(inviterUserId)).isEmpty()) {
+            return Pair.of(Optional.empty(), "Invalid username.");
+        }
+
+        final UserConnectionStatus userConnectionStatus = getStatus(inviterUserId, acceptorUserId);
+        if (userConnectionStatus == UserConnectionStatus.ACCEPTED) {
+            return Pair.of(Optional.empty(), "Already connected.");
+        }
+
+        if (userConnectionStatus != UserConnectionStatus.PENDING) {
+            return Pair.of(Optional.empty(), "Accept failed.");
+        }
+
+        final Optional<String> acceptorUsername = userService.getUserName(acceptorUserId);
+        if (acceptorUsername.isEmpty()) {
+            log.error("Invalid userId. userid: {}", acceptorUserId);
+
+            return Pair.of(Optional.empty(), "Accept failed.");
+        }
+
+        try {
+            userConnectionLimitService.accept(acceptorUserId, inviterUserId);
+
+            return Pair.of(Optional.of(inviterUserId), acceptorUsername.get());
+        } catch (EntityNotFoundException e) {
+            log.error("Accept failed. cause: {}", e.getMessage());
+
+            return Pair.of(Optional.empty(), "Accept failed.");
+        } catch (IllegalStateException e) {
+            return Pair.of(Optional.empty(), e.getMessage());
+        }
+    }
+
+    private Optional<UserId> getInviterUserId(UserId partnerAUserId, UserId partnerBUserId) {
+        return userConnectionRepository.findInviterUserIdByPartnerAUserIdAndPartnerBUserId(
+                Long.min(partnerAUserId.id(), partnerBUserId.id()),
+                Long.max(partnerAUserId.id(), partnerBUserId.id())
+        ).map(inviterUSerId -> new UserId(inviterUSerId.getInviterUserId()));
     }
 
     private UserConnectionStatus getStatus(UserId inviterUserId, UserId partnerUserId) {

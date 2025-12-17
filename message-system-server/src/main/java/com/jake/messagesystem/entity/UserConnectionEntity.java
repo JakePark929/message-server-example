@@ -21,7 +21,7 @@ public class UserConnectionEntity extends BaseEntity{
     private Long partnerAUserId;
 
     @Id
-    @Column(name = "partner_a_user_id", nullable = false)
+    @Column(name = "partner_b_user_id", nullable = false)
     private Long partnerBUserId;
 
     @Enumerated(EnumType.STRING)
