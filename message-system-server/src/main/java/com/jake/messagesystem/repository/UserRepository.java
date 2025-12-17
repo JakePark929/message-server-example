@@ -1,5 +1,6 @@
 package com.jake.messagesystem.repository;
 
+import com.jake.messagesystem.dto.projection.CountProjection;
 import com.jake.messagesystem.dto.projection.InviteCodeProjection;
 import com.jake.messagesystem.dto.projection.UsernameProjection;
 import com.jake.messagesystem.entity.UserEntity;
@@ -17,6 +18,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UsernameProjection> findByUserId(@NonNull Long userId);
     Optional<UserEntity> findByConnectionInviteCode(@NonNull String connectionInviteCode);
     Optional<InviteCodeProjection> findInviteCodeByUserId(@NonNull Long userId);
+    Optional<CountProjection> findCountByUserId(@NonNull Long userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<UserEntity> findForUpdateByUserId(@NonNull Long userId);

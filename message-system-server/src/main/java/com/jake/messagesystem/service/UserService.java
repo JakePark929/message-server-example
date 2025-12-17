@@ -3,6 +3,7 @@ package com.jake.messagesystem.service;
 import com.jake.messagesystem.dto.InviteCode;
 import com.jake.messagesystem.dto.User;
 import com.jake.messagesystem.dto.UserId;
+import com.jake.messagesystem.dto.projection.CountProjection;
 import com.jake.messagesystem.dto.projection.UsernameProjection;
 import com.jake.messagesystem.entity.UserEntity;
 import com.jake.messagesystem.repository.UserRepository;
@@ -52,6 +53,10 @@ public class UserService {
         log.info("User registered. UserId: {}, Username: {}", userEntity.getUserId(), userEntity.getUsername());
 
         return new UserId(userEntity.getUserId());
+    }
+
+    public Optional<Integer> getConnectionCount(UserId userId) {
+        return userRepository.findCountByUserId(userId.id()).map(CountProjection::getConnectionCount);
     }
 
     @Transactional

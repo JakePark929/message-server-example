@@ -50,6 +50,10 @@ public class UserConnectionService {
 
         return switch (userConnectionStatus) {
             case NONE, DISCONNECTED -> {
+                if (userService.getConnectionCount(inviterUserId).filter(count -> count >= userConnectionLimitService.getLimitConnections()).isPresent()) {
+                    yield Pair.of(Optional.empty(), "Connection limit reached.");
+                }
+
                 final Optional<String> inviterUsername = userService.getUserName(inviterUserId);
 
                 if (inviterUsername.isEmpty()) {
