@@ -4,6 +4,7 @@ import com.jake.messagesystem.constants.UserConnectionStatus;
 import com.jake.messagesystem.dto.InviteCode;
 import com.jake.messagesystem.dto.User;
 import com.jake.messagesystem.dto.UserId;
+import com.jake.messagesystem.dto.projection.UserIdUsernameProjection;
 import com.jake.messagesystem.entity.UserConnectionEntity;
 import com.jake.messagesystem.repository.UserConnectionRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,7 +14,9 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 public class UserConnectionService {
@@ -27,6 +30,15 @@ public class UserConnectionService {
         this.userService = userService;
         this.userConnectionRepository = userConnectionRepository;
         this.userConnectionLimitService = userConnectionLimitService;
+    }
+
+    public List<User> getUsersByStatus(UserId userId, UserConnectionStatus status) {
+        final List<UserIdUsernameProjection> usersA = userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id(), status);
+        final List<UserIdUsernameProjection> usersB = userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id(), status);
+
+        return Stream.concat(usersA.stream(), usersB.stream()).map(item ->
+                        new User(new UserId(item.getUserId()), item.getUsername()))
+                .toList();
     }
 
     @Transactional
@@ -151,7 +163,7 @@ public class UserConnectionService {
     }
 
     private UserConnectionStatus getStatus(UserId inviterUserId, UserId partnerUserId) {
-        return userConnectionRepository.findByPartnerAUserIdAndPartnerBUserId(Long.min(inviterUserId.id(), partnerUserId.id()), Long.max(inviterUserId.id(), partnerUserId.id()))
+        return userConnectionRepository.findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(Long.min(inviterUserId.id(), partnerUserId.id()), Long.max(inviterUserId.id(), partnerUserId.id()))
                 .map(status -> UserConnectionStatus.valueOf(status.getStatus()))
                 .orElse(UserConnectionStatus.NONE);
     }

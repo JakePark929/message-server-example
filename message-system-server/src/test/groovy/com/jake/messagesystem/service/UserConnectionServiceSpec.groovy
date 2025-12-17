@@ -30,7 +30,7 @@ class UserConnectionServiceSpec extends Specification {
         userService.getUser(inviteCodeOfTargetUser) >> Optional.of(new User(targetUserId, targetUsername))
         userService.getUserName(senderUserId) >> Optional.of(senderUsername)
         userService.getConnectionCount(senderUserId) >> { senderUserId.id() != 8 ? Optional.of(0) : Optional.of(1_000) }
-        userConnectionRepository.findByPartnerAUserIdAndPartnerBUserId(_ as Long, _ as Long) >> {
+        userConnectionRepository.findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(_ as Long, _ as Long) >> {
             Optional.of(Stub(UserConnectionStatusProjection) {
                 getStatus() >> beforeConnectionStatus.name()
             })
@@ -72,7 +72,7 @@ class UserConnectionServiceSpec extends Specification {
                 Optional.of(new UserConnectionEntity(senderUserId.id(), targetUserId.id(), UserConnectionStatus.PENDING, inviter.id()))
             }
         }
-        userConnectionRepository.findByPartnerAUserIdAndPartnerBUserId(_ as Long, _ as Long) >> {
+        userConnectionRepository.findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(_ as Long, _ as Long) >> {
             Optional.of(Stub(UserConnectionStatusProjection) {
                 getStatus() >> beforeConnectionStatus.name()
             })
@@ -108,7 +108,7 @@ class UserConnectionServiceSpec extends Specification {
         given:
         userService.getUserId(targetUsername) >> Optional.of(targetUserId)
         userService.getUserName(senderUserId) >> Optional.of(senderUsername)
-        userConnectionRepository.findByPartnerAUserIdAndPartnerBUserId(_ as Long, _ as Long) >> {
+        userConnectionRepository.findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(_ as Long, _ as Long) >> {
             Optional.of(Stub(UserConnectionStatusProjection) {
                 getStatus() >> beforeConnectionStatus.name()
             })
