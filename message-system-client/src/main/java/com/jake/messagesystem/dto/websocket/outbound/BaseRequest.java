@@ -1,4 +1,4 @@
-package com.jake.messagesystem.dto.websocket.inbound;
+package com.jake.messagesystem.dto.websocket.outbound;
 
 public abstract class BaseRequest {
     private final String type;

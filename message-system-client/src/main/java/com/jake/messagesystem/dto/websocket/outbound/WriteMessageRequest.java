@@ -1,13 +1,13 @@
-package com.jake.messagesystem.dto.websocket.inbound;
+package com.jake.messagesystem.dto.websocket.outbound;
 
 import com.jake.messagesystem.constants.MessageType;
 
-public class MessageRequest extends BaseRequest {
+public class WriteMessageRequest extends BaseRequest {
     private final String username;
     private final String content;
 
-    public MessageRequest(String username, String content) {
-        super(MessageType.MESSAGE);
+    public WriteMessageRequest(String username, String content) {
+        super(MessageType.WRITE_MESSAGE);
         this.username = username;
         this.content = content;
     }
