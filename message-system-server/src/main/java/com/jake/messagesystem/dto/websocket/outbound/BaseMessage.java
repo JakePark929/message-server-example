@@ -1,9 +1,9 @@
 package com.jake.messagesystem.dto.websocket.outbound;
 
-public abstract class BaseRequest {
+public abstract class BaseMessage {
     private final String type;
 
-    public BaseRequest(String type) {
+    public BaseMessage(String type) {
         this.type = type;
     }
 

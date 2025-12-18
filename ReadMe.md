@@ -8,12 +8,13 @@ $ login [id] : 로그인 실행
 ```
 
 ## 🧑‍💻 Tech Stack
-|   구분   | 기술명                                                                |
-|:------:|:-------------------------------------------------------------------|
-| Common | - Java 17.0.13 (Eclipse Temurin) <br/> - Spock 4 (테스트 프레임워크)       |
-| Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine)  |
-| Server | - SpringBoot 3.4.11(LTS) <br/> - Spring Security <br/> - WebSocket |
-| Infra  | - MySQL 8.0.40 (RDB) <br/> - Redis 7.4.1                           |
+
+|   구분   | 기술명                                                                                            |
+|:------:|:-----------------------------------------------------------------------------------------------|
+| Common | - Java 17.0.13 (Eclipse Temurin)                                                               |
+| Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine)                              |
+| Server | - SpringBoot 3.4.11(LTS) <br/> - Spring Security <br/> - WebSocket <br/> - Spock 4 (테스트 프레임워크) |
+| Infra  | - MySQL 8.0.40 (RDB) <br/> - Redis 7.4.1                                                       |
 
 > Tyrus = Jakarta WebSocket(JSR 356)의 표준 구현체
 
@@ -37,24 +38,27 @@ message-system/
 │ └── src/
 │ ├── main/java/com/jake/messagesystem/
 │ │ ├── auth/ # 인증 관련 코드
-│ │ ├── constants/ # 상수
 │ │ ├── config/ # 서버 설정
-│ │ ├── dto/ # 데이터 전송 객체 (DTO)
+│ │ ├── constants/ # 상수
+│ │ ├── controller/ # API 요청 및 응답처리
+│ │ ├── dto/ # 데이터 전송 객체
 │ │ ├── entity/ # 엔티티 객체
 │ │ ├── handler/ # WebSocket 등 핸들러
 │ │ ├── repository/ # 리포지터리 객체
 │ │ ├── service/ # 메세지 서비스
 │ │ ├── session/ # 세션 관리 로직
+│ │ ├── util/ # 유틸리티 클래스
 │ │ └── MessageSystemApplication.java # 서버 실행 진입점
 │ └── resources/ # 리소스 파일
 │ └── test/ # 테스트 코드
 ```
 
 ## 📄 Server API Spec
-| 구분 |     URL     |METHOD| 기능   |
-|:--:|:-----------:|:-:|:-----|
-| 인증 |  /register  |POST| 회원가입 |
-| 인증 | /unregister |POST| 회원삭제 |
+
+| 구분 |     URL     | METHOD | 기능   |
+|:--:|:-----------:|:------:|:-----|
+| 인증 |  /register  |  POST  | 회원가입 |
+| 인증 | /unregister |  POST  | 회원삭제 |
 
 ## 📖 메세징 서버 관련 지식
 
@@ -70,5 +74,6 @@ message-system/
 |   사용 예    |                       ARP, DHCP 등                        |                           그룹 채팅 메세지, 알림 시스템 등                            |
 
 > - ARP(Address Resolution Protocol) : 특정 Host IP를 알지만 MAC Address 를 모를때 ARP 패킷 전파,  
->   IP 로 MAC Address 를 알 수 있음 (+RARP : MAC Address 를 알 때, RARP로 IP 주소 할당, 지금은 DHCP가 대체)  
-> - DHCP(Dynamic Host Configuration Protocol) : 네트워크 내 DHCP 서버가 IP 주소와 관련 네트워크 설정을 자동으로 클라이언트에 할당해 주는 프로토콜 (공유기/라우터 등에 내장)   
+    > IP 로 MAC Address 를 알 수 있음 (+RARP : MAC Address 를 알 때, RARP로 IP 주소 할당, 지금은 DHCP가 대체)
+> - DHCP(Dynamic Host Configuration Protocol) : 네트워크 내 DHCP 서버가 IP 주소와 관련 네트워크 설정을 자동으로 클라이언트에 할당해 주는 프로토콜 (공유기/라우터 등에
+    내장)   

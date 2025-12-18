@@ -3,11 +3,8 @@ package com.jake.messagesystem.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jake.messagesystem.dto.rest.req.LoginRequest;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -25,7 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class RestApiLoginAuthFilter extends AbstractAuthenticationProcessingFilter {
-    private final static Logger log = LoggerFactory.getLogger(RestApiLoginAuthFilter.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RestApiLoginAuthFilter(RequestMatcher requiresAuthenticationRequestMatcher, AuthenticationManager authenticationManager) {
@@ -63,7 +59,7 @@ public class RestApiLoginAuthFilter extends AbstractAuthenticationProcessingFilt
     }
 
     @Override
-    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setCharacterEncoding("UTF-8");
         response.setContentType(MediaType.TEXT_PLAIN_VALUE);
