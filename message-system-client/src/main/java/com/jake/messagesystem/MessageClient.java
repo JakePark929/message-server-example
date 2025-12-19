@@ -8,6 +8,7 @@ import com.jake.messagesystem.handler.WebSocketSender;
 import com.jake.messagesystem.service.RestApiService;
 import com.jake.messagesystem.service.TerminalService;
 import com.jake.messagesystem.service.WebSocketService;
+import com.jake.messagesystem.util.JsonUtil;
 
 public class MessageClient {
     public static void main(String[] args) {
@@ -23,6 +24,7 @@ public class MessageClient {
             return;
         }
 
+        JsonUtil.setTerminalService(terminalService);
         RestApiService restApiService = new RestApiService(terminalService, BASE_URL);
         WebSocketSender webSocketSender = new WebSocketSender(terminalService);
         WebSocketService webSocketService = new WebSocketService(terminalService, webSocketSender, BASE_URL, WEBSOCKET_ENDPOINT);

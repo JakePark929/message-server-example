@@ -54,7 +54,7 @@ public class WebSocketService {
 
             return true;
         } catch (Exception e) {
-            terminalService.printSystemMessage(String.format("Failed to connect to [%s] error : %s", webSocketUrl, e.getMessage()));
+            terminalService.printSystemMessage("Failed to connect to [%s] error : %s".formatted(webSocketUrl, e.getMessage()));
 
             return false;
         }
@@ -72,7 +72,7 @@ public class WebSocketService {
                 session = null;
             }
         } catch (Exception e) {
-            terminalService.printSystemMessage(String.format("Failed to close. error : %s", e.getMessage()));
+            terminalService.printSystemMessage("Failed to close. error : %s".formatted(e.getMessage()));
         }
     }
 

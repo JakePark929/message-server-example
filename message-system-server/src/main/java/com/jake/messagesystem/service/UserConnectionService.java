@@ -4,7 +4,7 @@ import com.jake.messagesystem.constants.UserConnectionStatus;
 import com.jake.messagesystem.dto.InviteCode;
 import com.jake.messagesystem.dto.User;
 import com.jake.messagesystem.dto.UserId;
-import com.jake.messagesystem.dto.projection.UserIdUsernameProjection;
+import com.jake.messagesystem.dto.projection.UserIdUsernameInviterUserIdProjection;
 import com.jake.messagesystem.entity.UserConnectionEntity;
 import com.jake.messagesystem.repository.UserConnectionRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -33,12 +33,19 @@ public class UserConnectionService {
     }
 
     public List<User> getUsersByStatus(UserId userId, UserConnectionStatus status) {
-        final List<UserIdUsernameProjection> usersA = userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id(), status);
-        final List<UserIdUsernameProjection> usersB = userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id(), status);
+        final List<UserIdUsernameInviterUserIdProjection> usersA = userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id(), status);
+        final List<UserIdUsernameInviterUserIdProjection> usersB = userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id(), status);
 
-        return Stream.concat(usersA.stream(), usersB.stream()).map(item ->
-                        new User(new UserId(item.getUserId()), item.getUsername()))
-                .toList();
+        if (status == UserConnectionStatus.ACCEPTED) {
+            return Stream.concat(usersA.stream(), usersB.stream())
+                    .map(item -> new User(new UserId(item.getUserId()), item.getUsername()))
+                    .toList();
+        } else {
+            return Stream.concat(usersA.stream(), usersB.stream())
+                    .filter(item -> !item.getInviterUserId().equals(userId.id()))
+                    .map(item -> new User(new UserId(item.getUserId()), item.getUsername()))
+                    .toList();
+        }
     }
 
     @Transactional

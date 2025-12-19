@@ -30,6 +30,8 @@ public class RequestDispatcher {
 
         if (handler != null) {
             handler.handleRequest(webSocketSession, request);
+
+            return;
         }
 
         log.error("Handler not found for request type: {}", request.getClass().getSimpleName());
