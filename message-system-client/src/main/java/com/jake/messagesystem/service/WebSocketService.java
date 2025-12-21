@@ -1,8 +1,8 @@
 package com.jake.messagesystem.service;
 
-import com.jake.messagesystem.dto.websocket.inbound.BaseRequest;
-import com.jake.messagesystem.dto.websocket.inbound.KeepAliveRequest;
-import com.jake.messagesystem.dto.websocket.inbound.MessageRequest;
+import com.jake.messagesystem.dto.websocket.outbound.BaseRequest;
+import com.jake.messagesystem.dto.websocket.outbound.KeepAliveRequest;
+import com.jake.messagesystem.dto.websocket.outbound.WriteMessageRequest;
 import com.jake.messagesystem.handler.WebSocketMessageHandler;
 import com.jake.messagesystem.handler.WebSocketSender;
 import com.jake.messagesystem.handler.WebSocketSessionHandler;
@@ -54,7 +54,7 @@ public class WebSocketService {
 
             return true;
         } catch (Exception e) {
-            terminalService.printSystemMessage(String.format("Failed to connect to [%s] error : %s", webSocketUrl, e.getMessage()));
+            terminalService.printSystemMessage("Failed to connect to [%s] error : %s".formatted(webSocketUrl, e.getMessage()));
 
             return false;
         }
@@ -72,13 +72,13 @@ public class WebSocketService {
                 session = null;
             }
         } catch (Exception e) {
-            terminalService.printSystemMessage(String.format("Failed to close. error : %s", e.getMessage()));
+            terminalService.printSystemMessage("Failed to close. error : %s".formatted(e.getMessage()));
         }
     }
 
     public void sendMessage(BaseRequest baseRequest) {
         if (session != null && session.isOpen()) {
-            if (baseRequest instanceof MessageRequest messageRequest) {
+            if (baseRequest instanceof WriteMessageRequest messageRequest) {
                 webSocketSender.sendMessage(session, messageRequest);
 
                 return;

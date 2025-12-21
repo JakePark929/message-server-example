@@ -3,7 +3,7 @@ package com.jake.messagesystem.handler;
 import com.jake.messagesystem.constants.Constants;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.BaseRequest;
-import com.jake.messagesystem.handler.websocket.RequestHandlerDispatcher;
+import com.jake.messagesystem.handler.websocket.RequestDispatcher;
 import com.jake.messagesystem.session.WebSocketSessionManager;
 import com.jake.messagesystem.util.JsonUtil;
 import org.slf4j.Logger;
@@ -22,12 +22,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     private final JsonUtil jsonUtil;
     private final WebSocketSessionManager webSocketSessionManager;
-    private final RequestHandlerDispatcher requestHandlerDispatcher;
+    private final RequestDispatcher requestDispatcher;
 
-    public WebSocketHandler(JsonUtil jsonUtil, WebSocketSessionManager webSocketSessionManager, RequestHandlerDispatcher requestHandlerDispatcher) {
+    public WebSocketHandler(JsonUtil jsonUtil, WebSocketSessionManager webSocketSessionManager, RequestDispatcher requestDispatcher) {
         this.jsonUtil = jsonUtil;
         this.webSocketSessionManager = webSocketSessionManager;
-        this.requestHandlerDispatcher = requestHandlerDispatcher;
+        this.requestDispatcher = requestDispatcher;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         log.info("Received TextMessage: [{}] from {}", payload, senderSession.getId());
 
-        jsonUtil.fromJson(payload, BaseRequest.class).ifPresent(msg -> requestHandlerDispatcher.dispatchRequest(senderSession, msg));
+        jsonUtil.fromJson(payload, BaseRequest.class).ifPresent(msg -> requestDispatcher.dispatchRequest(senderSession, msg));
     }
 
 

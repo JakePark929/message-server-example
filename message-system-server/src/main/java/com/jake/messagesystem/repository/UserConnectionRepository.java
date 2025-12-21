@@ -3,7 +3,7 @@ package com.jake.messagesystem.repository;
 import com.jake.messagesystem.constants.UserConnectionStatus;
 import com.jake.messagesystem.dto.projection.InviterUserIdProjection;
 import com.jake.messagesystem.dto.projection.UserConnectionStatusProjection;
-import com.jake.messagesystem.dto.projection.UserIdUsernameProjection;
+import com.jake.messagesystem.dto.projection.UserIdUsernameInviterUserIdProjection;
 import com.jake.messagesystem.entity.UserConnectionEntity;
 import com.jake.messagesystem.entity.UserConnectionId;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,18 +22,18 @@ public interface UserConnectionRepository extends JpaRepository<UserConnectionEn
     Optional<InviterUserIdProjection> findInviterUserIdByPartnerAUserIdAndPartnerBUserId(@NonNull Long partnerAUserId, @NonNull Long partnerBUserId);
 
     @Query(
-            "SELECT u.partnerBUserId AS userId, userB.username as username "
+            "SELECT u.partnerBUserId AS userId, userB.username AS username, u.inviterUserId AS inviterUserId "
                     + "FROM UserConnectionEntity u "
                     + "INNER JOIN UserEntity userB ON u.partnerBUserId = userB.userId "
                     + "WHERE u.partnerAUserId = :userId AND u.status = :status"
     )
-    List<UserIdUsernameProjection> findByPartnerAUserIdAndStatus(@Param("userId") Long userId, @Param("status") UserConnectionStatus status);
+    List<UserIdUsernameInviterUserIdProjection> findByPartnerAUserIdAndStatus(@Param("userId") Long userId, @Param("status") UserConnectionStatus status);
 
     @Query(
-            "SELECT u.partnerAUserId AS userId, userA.username as username "
+            "SELECT u.partnerAUserId AS userId, userA.username as username, u.inviterUserId AS inviterUserId "
                     + "FROM UserConnectionEntity u "
                     + "INNER JOIN UserEntity userA ON u.partnerAUserId = userA.userId "
                     + "WHERE u.partnerBUserId = :userId AND u.status = :status"
     )
-    List<UserIdUsernameProjection> findByPartnerBUserIdAndStatus(@Param("userId") Long userId, @Param("status") UserConnectionStatus status);
+    List<UserIdUsernameInviterUserIdProjection> findByPartnerBUserIdAndStatus(@Param("userId") Long userId, @Param("status") UserConnectionStatus status);
 }

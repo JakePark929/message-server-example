@@ -3,8 +3,14 @@
 웹소켓 기반 멀티모듈 메세지 시스템 프로젝트 입니다.  
 CLI 클라이언트와 웹소켓 서버로 구성되어 있습니다.
 
+### 채팅 클라이언트 CLI 명령어 
 ```shell
-$ login [id] : 로그인 실행
+$ /register [username] [password] : 회원 가입 
+$ /unregister : 회원 탈퇴
+$ /login [username] [password] : 로그인
+$ /logout : 로그아웃
+$ /clear : 터미널 초기화
+$ /exit : 로그아웃 후 종료
 ```
 
 ## 🧑‍💻 Tech Stack

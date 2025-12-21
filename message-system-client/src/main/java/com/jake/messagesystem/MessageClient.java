@@ -1,12 +1,14 @@
 package com.jake.messagesystem;
 
-import com.jake.messagesystem.dto.websocket.inbound.MessageRequest;
+import com.jake.messagesystem.dto.websocket.outbound.WriteMessageRequest;
 import com.jake.messagesystem.handler.CommandHandler;
+import com.jake.messagesystem.handler.InboundMessageHandler;
 import com.jake.messagesystem.handler.WebSocketMessageHandler;
 import com.jake.messagesystem.handler.WebSocketSender;
 import com.jake.messagesystem.service.RestApiService;
 import com.jake.messagesystem.service.TerminalService;
 import com.jake.messagesystem.service.WebSocketService;
+import com.jake.messagesystem.util.JsonUtil;
 
 public class MessageClient {
     public static void main(String[] args) {
@@ -22,10 +24,12 @@ public class MessageClient {
             return;
         }
 
+        JsonUtil.setTerminalService(terminalService);
         RestApiService restApiService = new RestApiService(terminalService, BASE_URL);
         WebSocketSender webSocketSender = new WebSocketSender(terminalService);
         WebSocketService webSocketService = new WebSocketService(terminalService, webSocketSender, BASE_URL, WEBSOCKET_ENDPOINT);
-        webSocketService.setWebSocketMessageHandler(new WebSocketMessageHandler(terminalService));
+        InboundMessageHandler inboundMessageHandler = new InboundMessageHandler(terminalService);
+        webSocketService.setWebSocketMessageHandler(new WebSocketMessageHandler(inboundMessageHandler));
         CommandHandler commandHandler = new CommandHandler(restApiService, webSocketService, terminalService);
 
         terminalService.printSystemMessage("채팅 클라이언트 시작! /exit 로 종료, /clear 로 화면 지우기");
@@ -43,7 +47,7 @@ public class MessageClient {
                 }
             } else if (!input.isEmpty()) {
                 terminalService.printMessage("<me>", input.trim());
-                webSocketService.sendMessage(new MessageRequest("test client", input));
+                webSocketService.sendMessage(new WriteMessageRequest("test client", input));
             }
         }
     }

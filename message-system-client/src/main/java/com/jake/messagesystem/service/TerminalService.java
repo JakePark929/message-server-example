@@ -46,7 +46,7 @@ public class TerminalService {
 
     /** 일반 메시지 출력 (입력창 위에 쌓임). */
     public void printMessage(String username, String content) {
-        lineReader.printAbove(String.format("%s : %s", username, content));
+        lineReader.printAbove("%s : %s".formatted(username, content));
     }
 
     /** 시스템 메시지 출력 (입력창 위에 쌓임). */
