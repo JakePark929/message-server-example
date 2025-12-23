@@ -27,7 +27,7 @@ class RequestTypeMappingSpec extends Specification {
         '{"type": "ACCEPT_REQUEST", "username": "testUser"}'                           | AcceptRequest              | { req -> (req as AcceptRequest).username == 'testUser' }
         '{"type": "REJECT_REQUEST", "username": "testUser"}'                           | RejectRequest              | { req -> (req as RejectRequest).username == 'testUser' }
         '{"type": "DISCONNECT_REQUEST", "username": "testUser"}'                       | DisconnectRequest          | { req -> (req as DisconnectRequest).username == 'testUser' }
-        '{"type": "WRITE_MESSAGE", "username": "TestUser", "content": "test message"}' | WriteMessageRequest        | { req -> (req as WriteMessageRequest).content == 'test message' }
-        '{"type": "KEEP_ALIVE"}'                                                       | KeepAliveRequest           | { req -> (req as KeepAliveRequest).getType() == 'KEEP_ALIVE' }
+        '{"type": "WRITE_MESSAGE", "username": "TestUser", "content": "test message"}' | WriteMessage               | { req -> (req as WriteMessage).content == 'test message' }
+        '{"type": "KEEP_ALIVE"}'                                                       | KeepAlive                  | { req -> (req as KeepAlive).getType() == 'KEEP_ALIVE' }
     }
 }

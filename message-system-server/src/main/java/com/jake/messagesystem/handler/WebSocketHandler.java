@@ -1,6 +1,6 @@
 package com.jake.messagesystem.handler;
 
-import com.jake.messagesystem.constants.Constants;
+import com.jake.messagesystem.constants.IdKey;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.BaseRequest;
 import com.jake.messagesystem.handler.websocket.RequestDispatcher;
@@ -35,7 +35,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         log.info("ConnectionEstablished: {}", session.getId());
 
         ConcurrentWebSocketSessionDecorator concurrentWebSocketSessionDecorator = new ConcurrentWebSocketSessionDecorator(session, 5000, 100 * 1024);
-        final UserId userId = (UserId) session.getAttributes().get(Constants.USER_ID.getValue());
+        final UserId userId = (UserId) session.getAttributes().get(IdKey.USER_ID.getValue());
         webSocketSessionManager.putSession(userId, concurrentWebSocketSessionDecorator);
     }
 
@@ -43,7 +43,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, @NonNull CloseStatus status) {
         log.info("ConnectionClosed: [{}] from {}", status, session.getId());
 
-        final UserId userId = (UserId) session.getAttributes().get(Constants.USER_ID.getValue());
+        final UserId userId = (UserId) session.getAttributes().get(IdKey.USER_ID.getValue());
         webSocketSessionManager.closeSession(userId);
     }
 
@@ -51,7 +51,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
     public void handleTransportError(WebSocketSession session, Throwable exception) {
         log.error("TransportError: [{}] from {}", exception.getMessage(), session.getId());
 
-        final UserId userId = (UserId) session.getAttributes().get(Constants.USER_ID.getValue());
+        final UserId userId = (UserId) session.getAttributes().get(IdKey.USER_ID.getValue());
         webSocketSessionManager.closeSession(userId);
     }
 

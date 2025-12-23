@@ -7,7 +7,6 @@ import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.projection.UserIdUsernameInviterUserIdProjection;
 import com.jake.messagesystem.entity.UserConnectionEntity;
 import com.jake.messagesystem.repository.UserConnectionRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
@@ -46,6 +45,12 @@ public class UserConnectionService {
                     .map(item -> new User(new UserId(item.getUserId()), item.getUsername()))
                     .toList();
         }
+    }
+
+    public UserConnectionStatus getStatus(UserId inviterUserId, UserId partnerUserId) {
+        return userConnectionRepository.findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(Long.min(inviterUserId.id(), partnerUserId.id()), Long.max(inviterUserId.id(), partnerUserId.id()))
+                .map(status -> UserConnectionStatus.valueOf(status.getStatus()))
+                .orElse(UserConnectionStatus.NONE);
     }
 
     @Transactional
@@ -135,12 +140,12 @@ public class UserConnectionService {
             userConnectionLimitService.accept(acceptorUserId, inviterUserId);
 
             return Pair.of(Optional.of(inviterUserId), acceptorUsername.get());
-        } catch (EntityNotFoundException e) {
+        } catch (IllegalStateException e) {
+            return Pair.of(Optional.empty(), e.getMessage());
+        } catch (Exception e) {
             log.error("Accept failed. cause: {}", e.getMessage());
 
             return Pair.of(Optional.empty(), "Accept failed.");
-        } catch (IllegalStateException e) {
-            return Pair.of(Optional.empty(), e.getMessage());
         }
     }
 
@@ -197,13 +202,6 @@ public class UserConnectionService {
                 Long.max(partnerAUserId.id(), partnerBUserId.id())
         ).map(inviterUSerId -> new UserId(inviterUSerId.getInviterUserId()));
     }
-
-    private UserConnectionStatus getStatus(UserId inviterUserId, UserId partnerUserId) {
-        return userConnectionRepository.findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(Long.min(inviterUserId.id(), partnerUserId.id()), Long.max(inviterUserId.id(), partnerUserId.id()))
-                .map(status -> UserConnectionStatus.valueOf(status.getStatus()))
-                .orElse(UserConnectionStatus.NONE);
-    }
-
 
     private void setStatus(UserId inviterUserId, UserId partnerUserId, UserConnectionStatus userConnectionStatus) {
         if (userConnectionStatus.equals(UserConnectionStatus.ACCEPTED)) {

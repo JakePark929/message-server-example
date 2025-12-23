@@ -1,6 +1,6 @@
 package com.jake.messagesystem.handler.websocket;
 
-import com.jake.messagesystem.constants.Constants;
+import com.jake.messagesystem.constants.IdKey;
 import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.AcceptRequest;
@@ -27,7 +27,7 @@ public class AcceptRequestHandler implements BaseRequestHandler<AcceptRequest> {
 
     @Override
     public void handleRequest(WebSocketSession senderSession, AcceptRequest request) {
-        final UserId acceptorUserId = (UserId) senderSession.getAttributes().get(Constants.USER_ID.getValue());
+        final UserId acceptorUserId = (UserId) senderSession.getAttributes().get(IdKey.USER_ID.getValue());
 
         final Pair<Optional<UserId>, String> accept = userConnectionService.accept(acceptorUserId, request.getUsername());
         accept.getFirst().ifPresentOrElse(inviterUserId -> {

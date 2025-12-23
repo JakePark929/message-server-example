@@ -1,6 +1,6 @@
 package com.jake.messagesystem.handler.websocket;
 
-import com.jake.messagesystem.constants.Constants;
+import com.jake.messagesystem.constants.IdKey;
 import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.constants.UserConnectionStatus;
 import com.jake.messagesystem.dto.UserId;
@@ -25,7 +25,7 @@ public class RejectRequestHandler implements BaseRequestHandler<RejectRequest> {
 
     @Override
     public void handleRequest(WebSocketSession senderSession, RejectRequest request) {
-        final UserId senderUserId = (UserId) senderSession.getAttributes().get(Constants.USER_ID.getValue());
+        final UserId senderUserId = (UserId) senderSession.getAttributes().get(IdKey.USER_ID.getValue());
 
         userConnectionService.reject(senderUserId, request.getUsername());
         Pair<Boolean, String> reject = userConnectionService.reject(senderUserId, request.getUsername());

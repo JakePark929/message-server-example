@@ -1,5 +1,11 @@
 package com.jake.messagesystem.service;
 
+import com.jake.messagesystem.constants.IdKey;
+import com.jake.messagesystem.dto.ChannelId;
+import com.jake.messagesystem.dto.UserId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.session.Session;
@@ -7,13 +13,21 @@ import org.springframework.session.SessionRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SessionService {
-    private final SessionRepository<? extends Session> httpSessionRepository;
+    private static final Logger log = LoggerFactory.getLogger(SessionService.class);
 
-    public SessionService(SessionRepository<? extends Session> httpSessionRepository) {
+    private final SessionRepository<? extends Session> httpSessionRepository;
+    private final StringRedisTemplate stringRedisTemplate;
+
+    private final String NAMESPACE = "message:user";
+    private final long TTL = 300;
+
+    public SessionService(SessionRepository<? extends Session> httpSessionRepository, StringRedisTemplate stringRedisTemplate) {
         this.httpSessionRepository = httpSessionRepository;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     public String getUsername() {
@@ -22,11 +36,36 @@ public class SessionService {
         return authentication.getName();
     }
 
-    public void refreshTTL(String httpSessionId) {
-        final Session httpSession = httpSessionRepository.findById(httpSessionId);
+    public boolean setActiveChannel(UserId userId, ChannelId channelId) {
+        final String channelIdKey = buildChannelIdKey(userId);
 
-        if (httpSession != null) {
-            httpSession.setLastAccessedTime(Instant.now());
+        try {
+            stringRedisTemplate.opsForValue().set(channelIdKey, channelId.id().toString(), TTL, TimeUnit.SECONDS);
+
+            return true;
+        } catch (Exception e) {
+            log.error("Redis set failed. key: {}, channelId: {}", channelIdKey, channelId);
+
+            return false;
         }
+    }
+
+    public void refreshTTL(UserId userId, String httpSessionId) {
+        final String channelIdKey = buildChannelIdKey(userId);
+
+        try {
+            final Session httpSession = httpSessionRepository.findById(httpSessionId);
+
+            if (httpSession != null) {
+                httpSession.setLastAccessedTime(Instant.now());
+                stringRedisTemplate.expire(channelIdKey, TTL, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            log.error("Redis expire failed. key: {}", channelIdKey);
+        }
+    }
+
+    private String buildChannelIdKey(UserId userId) {
+        return "%s:%d:%s".formatted(NAMESPACE, userId.id(), IdKey.CHANNEL_ID);
     }
 }

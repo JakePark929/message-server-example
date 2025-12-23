@@ -1,6 +1,6 @@
 package com.jake.messagesystem.auth;
 
-import com.jake.messagesystem.constants.Constants;
+import com.jake.messagesystem.constants.IdKey;
 import com.jake.messagesystem.dto.UserId;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -45,8 +45,8 @@ public class WebSocketHttpSessionHandshakeInterceptor extends HttpSessionHandsha
             }
 
             final MessageUserDetails messageUserDetails = (MessageUserDetails) authentication.getPrincipal();
-            attributes.put(Constants.HTTP_SESSION_ID.getValue(), httpSession.getId());
-            attributes.put(Constants.USER_ID.getValue(), new UserId(messageUserDetails.getUserId()));
+            attributes.put(IdKey.HTTP_SESSION_ID.getValue(), httpSession.getId());
+            attributes.put(IdKey.USER_ID.getValue(), new UserId(messageUserDetails.getUserId()));
 
             return true;
         } else {
