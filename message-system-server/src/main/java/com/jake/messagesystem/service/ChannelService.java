@@ -36,6 +36,16 @@ public class ChannelService {
         return userChannelRepository.existsByUserIdAndChannelId(userId.id(), channelId.id());
     }
 
+    public List<UserId> getParticipantIds(ChannelId channelId) {
+        return userChannelRepository.findUserIdsByChannelId(channelId.id()).stream()
+                .map(userId -> new UserId(userId.getUserId()))
+                .toList();
+    }
+
+    public boolean isOnline(UserId userId, ChannelId channelId) {
+        return sessionService.isOnline(userId, channelId);
+    }
+
     @Transactional
     public Pair<Optional<Channel>, ResultType> create(UserId senderUSerId, UserId participantId, String title) {
         if (title == null || title.isEmpty()) {

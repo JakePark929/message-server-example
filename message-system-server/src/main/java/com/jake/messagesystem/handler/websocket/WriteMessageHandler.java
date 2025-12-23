@@ -1,31 +1,41 @@
 package com.jake.messagesystem.handler.websocket;
 
+import com.jake.messagesystem.constants.IdKey;
+import com.jake.messagesystem.dto.ChannelId;
+import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.WriteMessage;
 import com.jake.messagesystem.dto.websocket.outbound.MessageNotification;
-import com.jake.messagesystem.entity.MessageEntity;
-import com.jake.messagesystem.repository.MessageRepository;
+import com.jake.messagesystem.service.MessageService;
+import com.jake.messagesystem.service.UserService;
 import com.jake.messagesystem.session.WebSocketSessionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
 @Component
 public class WriteMessageHandler implements BaseRequestHandler<WriteMessage> {
+    private final UserService userService;
+    private final MessageService messageService;
     private final WebSocketSessionManager webSocketSessionManager;
-    private final MessageRepository messageRepository;
 
-    public WriteMessageHandler(WebSocketSessionManager webSocketSessionManager, MessageRepository messageRepository) {
+    public WriteMessageHandler(UserService userService, MessageService messageService, WebSocketSessionManager webSocketSessionManager) {
+        this.userService = userService;
+        this.messageService = messageService;
         this.webSocketSessionManager = webSocketSessionManager;
-        this.messageRepository = messageRepository;
     }
 
     @Override
     public void handleRequest(WebSocketSession senderSession, WriteMessage request) {
-        MessageNotification receivedMessage = new MessageNotification(request.getUsername(), request.getContent());
-        messageRepository.save(new MessageEntity(receivedMessage.getUsername(), receivedMessage.getContent()));
+        final UserId senderUserId = (UserId) senderSession.getAttributes().get(IdKey.USER_ID.getValue());
+        ChannelId channelId = request.getChannelId();
+        String content = request.getContent();
+        String senderUsername = userService.getUserName(senderUserId).orElse("unknown");
 
-        webSocketSessionManager.getSessions().forEach(participantSession -> {
-            if (!senderSession.getId().equals(participantSession.getId())) {
-                webSocketSessionManager.sendMessage(participantSession, receivedMessage);
+        messageService.sendMessage(senderUserId, content, channelId, (participantId) -> {
+            final WebSocketSession participantSession = webSocketSessionManager.getSession(participantId);
+            MessageNotification messageNotification = new MessageNotification(channelId, senderUsername, content);
+
+            if (participantSession != null) {
+                webSocketSessionManager.sendMessage(participantSession, messageNotification);
             }
         });
     }
