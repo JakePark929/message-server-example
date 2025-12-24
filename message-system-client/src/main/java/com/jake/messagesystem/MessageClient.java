@@ -1,12 +1,13 @@
 package com.jake.messagesystem;
 
-import com.jake.messagesystem.dto.websocket.outbound.WriteMessageRequest;
+import com.jake.messagesystem.dto.websocket.outbound.WriteMessage;
 import com.jake.messagesystem.handler.CommandHandler;
 import com.jake.messagesystem.handler.InboundMessageHandler;
 import com.jake.messagesystem.handler.WebSocketMessageHandler;
 import com.jake.messagesystem.handler.WebSocketSender;
 import com.jake.messagesystem.service.RestApiService;
 import com.jake.messagesystem.service.TerminalService;
+import com.jake.messagesystem.service.UserService;
 import com.jake.messagesystem.service.WebSocketService;
 import com.jake.messagesystem.util.JsonUtil;
 
@@ -24,15 +25,17 @@ public class MessageClient {
             return;
         }
 
+        UserService userService = new UserService();
         JsonUtil.setTerminalService(terminalService);
         RestApiService restApiService = new RestApiService(terminalService, BASE_URL);
         WebSocketSender webSocketSender = new WebSocketSender(terminalService);
-        WebSocketService webSocketService = new WebSocketService(terminalService, webSocketSender, BASE_URL, WEBSOCKET_ENDPOINT);
-        InboundMessageHandler inboundMessageHandler = new InboundMessageHandler(terminalService);
+        WebSocketService webSocketService = new WebSocketService(userService, terminalService, webSocketSender, BASE_URL, WEBSOCKET_ENDPOINT);
+        InboundMessageHandler inboundMessageHandler = new InboundMessageHandler(terminalService, userService);
         webSocketService.setWebSocketMessageHandler(new WebSocketMessageHandler(inboundMessageHandler));
-        CommandHandler commandHandler = new CommandHandler(restApiService, webSocketService, terminalService);
+        CommandHandler commandHandler = new CommandHandler(restApiService, webSocketService, terminalService, userService);
 
-        terminalService.printSystemMessage("채팅 클라이언트 시작! /exit 로 종료, /clear 로 화면 지우기");
+        terminalService.printSystemMessage("Chat client started! Type '/exit' to quit, '/clear' to clear the screen.");
+        terminalService.printSystemMessage("'/help' Help for commands. ex) /help");
 
         while (true) {
             String input = terminalService.readLine("Enter message: ");
@@ -45,9 +48,9 @@ public class MessageClient {
                 if (!commandHandler.process(command, argument)) {
                     break;
                 }
-            } else if (!input.isEmpty()) {
+            } else if (!input.isEmpty() && userService.isInChannel()) {
                 terminalService.printMessage("<me>", input.trim());
-                webSocketService.sendMessage(new WriteMessageRequest("test client", input));
+                webSocketService.sendMessage(new WriteMessage(userService.getChannelId(), input));
             }
         }
     }

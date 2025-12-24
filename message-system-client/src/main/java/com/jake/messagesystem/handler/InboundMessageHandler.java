@@ -3,21 +3,28 @@ package com.jake.messagesystem.handler;
 import com.jake.messagesystem.dto.websocket.inbound.AcceptNotification;
 import com.jake.messagesystem.dto.websocket.inbound.AcceptResponse;
 import com.jake.messagesystem.dto.websocket.inbound.BaseMessage;
+import com.jake.messagesystem.dto.websocket.inbound.CreateResponse;
 import com.jake.messagesystem.dto.websocket.inbound.DisconnectResponse;
+import com.jake.messagesystem.dto.websocket.inbound.EnterResponse;
+import com.jake.messagesystem.dto.websocket.inbound.ErrorResponse;
 import com.jake.messagesystem.dto.websocket.inbound.FetchConnectionsResponse;
 import com.jake.messagesystem.dto.websocket.inbound.FetchUserInviteCodeResponse;
 import com.jake.messagesystem.dto.websocket.inbound.InviteNotification;
 import com.jake.messagesystem.dto.websocket.inbound.InviteResponse;
+import com.jake.messagesystem.dto.websocket.inbound.JoinNotification;
 import com.jake.messagesystem.dto.websocket.inbound.MessageNotification;
 import com.jake.messagesystem.dto.websocket.inbound.RejectResponse;
 import com.jake.messagesystem.service.TerminalService;
+import com.jake.messagesystem.service.UserService;
 import com.jake.messagesystem.util.JsonUtil;
 
 public class InboundMessageHandler {
     private final TerminalService terminalService;
+    private final UserService userService;
 
-    public InboundMessageHandler(TerminalService terminalService) {
+    public InboundMessageHandler(TerminalService terminalService, UserService userService) {
         this.terminalService = terminalService;
+        this.userService = userService;
     }
 
     public void handle(String payload) {
@@ -41,6 +48,14 @@ public class InboundMessageHandler {
                         disconnect(disconnectResponse);
                     } else if (message instanceof FetchConnectionsResponse fetchConnectionsResponse) {
                         fetchConnections(fetchConnectionsResponse);
+                    } else if (message instanceof CreateResponse createResponse) {
+                        create(createResponse);
+                    } else if (message instanceof JoinNotification joinNotification) {
+                        joinNotification(joinNotification);
+                    } else if (message instanceof EnterResponse enterResponse) {
+                        enter(enterResponse);
+                    } else if (message instanceof ErrorResponse errorResponse) {
+                        error(errorResponse);
                     }
                 });
     }
@@ -81,5 +96,22 @@ public class InboundMessageHandler {
         fetchConnectionsResponse.getConnections().forEach(connection ->
                 terminalService.printSystemMessage("%s : %s".formatted(connection.username(), connection.status()))
         );
+    }
+
+    private void create(CreateResponse createResponse) {
+        terminalService.printSystemMessage("Create channel %s: %s".formatted(createResponse.getChannelId(), createResponse.getTitle()));
+    }
+
+    private void joinNotification(JoinNotification joinNotification) {
+        terminalService.printSystemMessage("Joined channel %s: %s".formatted(joinNotification.getChannelId(), joinNotification.getTitle()));
+    }
+
+    private void enter(EnterResponse enterResponse) {
+        userService.moveToChannel(enterResponse.getChannelId());
+        terminalService.printSystemMessage("Enter channel %s: %s".formatted(enterResponse.getChannelId(), enterResponse.getTitle()));
+    }
+
+    private void error(ErrorResponse errorResponse) {
+        terminalService.printSystemMessage("Error %s: %s".formatted(errorResponse.getMessageType(), errorResponse.getMessage()));
     }
 }

@@ -1,19 +1,20 @@
 package com.jake.messagesystem.dto.websocket.outbound;
 
 import com.jake.messagesystem.constants.MessageType;
+import com.jake.messagesystem.dto.ChannelId;
 
-public class WriteMessageRequest extends BaseRequest {
-    private final String username;
+public class WriteMessage extends BaseRequest {
+    private final ChannelId channelId;
     private final String content;
 
-    public WriteMessageRequest(String username, String content) {
+    public WriteMessage(ChannelId channelId, String content) {
         super(MessageType.WRITE_MESSAGE);
-        this.username = username;
+        this.channelId = channelId;
         this.content = content;
     }
 
-    public String getUsername() {
-        return username;
+    public ChannelId getChannelId() {
+        return channelId;
     }
 
     public String getContent() {

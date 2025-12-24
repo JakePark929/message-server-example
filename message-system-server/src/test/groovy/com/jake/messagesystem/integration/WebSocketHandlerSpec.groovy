@@ -57,14 +57,13 @@ class WebSocketHandlerSpec extends Specification {
         channelService.isOnline(_ as UserId, _ as ChannelId) >> true
 
         when:
-        clientA.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "testuserA", "안녕하세요. A 입니다."))))
-        clientB.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "testuserB", "안녕하세요. B 입니다."))))
+        clientA.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. A 입니다."))))
+        clientB.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. B 입니다."))))
 
         then:
         // 순서 상관 없이 테스트
         def resultA = clientA.queue.poll(1, TimeUnit.SECONDS)
         def resultB = clientB.queue.poll(1, TimeUnit.SECONDS)
-
         resultA.contains("testuserB")
         resultB.contains("testuserA")
 

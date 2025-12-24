@@ -1,6 +1,7 @@
 package com.jake.messagesystem.service;
 
 import com.jake.messagesystem.constants.ResultType;
+import com.jake.messagesystem.constants.UserConnectionStatus;
 import com.jake.messagesystem.dto.Channel;
 import com.jake.messagesystem.dto.ChannelId;
 import com.jake.messagesystem.dto.UserId;
@@ -23,11 +24,13 @@ public class ChannelService {
     private static final Logger log = LoggerFactory.getLogger(ChannelService.class);
 
     private final SessionService sessionService;
+    private final UserConnectionService userConnectionService;
     private final ChannelRepository channelRepository;
     private final UserChannelRepository userChannelRepository;
 
-    public ChannelService(SessionService sessionService, ChannelRepository channelRepository, UserChannelRepository userChannelRepository) {
+    public ChannelService(SessionService sessionService, UserConnectionService userConnectionService, ChannelRepository channelRepository, UserChannelRepository userChannelRepository) {
         this.sessionService = sessionService;
+        this.userConnectionService = userConnectionService;
         this.channelRepository = channelRepository;
         this.userChannelRepository = userChannelRepository;
     }
@@ -54,6 +57,12 @@ public class ChannelService {
             return Pair.of(Optional.empty(), ResultType.INVALID_ARGS);
         }
 
+        if (userConnectionService.getStatus(senderUSerId, participantId) != UserConnectionStatus.ACCEPTED) {
+            log.warn("Included unconnected user. participantId: {}", participantId);
+
+            return Pair.of(Optional.empty(), ResultType.NOT_ALLOWED);
+        }
+
         try {
             final int HEAD_COUNT = 2;
             ChannelEntity channelEntity = channelRepository.save(new ChannelEntity(title, HEAD_COUNT));
@@ -72,7 +81,6 @@ public class ChannelService {
     }
 
     public Pair<Optional<String>, ResultType> enter(ChannelId channelId, UserId userId) {
-
         if (!isJoined(channelId, userId)) {
             log.warn("Enter channel failed. User not joined. channelId: {}, userId: {}", channelId, userId);
             return Pair.of(Optional.empty(), ResultType.NOT_JOINED);

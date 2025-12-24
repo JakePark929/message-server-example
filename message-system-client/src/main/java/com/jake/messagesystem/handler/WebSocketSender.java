@@ -1,6 +1,6 @@
 package com.jake.messagesystem.handler;
 
-import com.jake.messagesystem.dto.websocket.outbound.WriteMessageRequest;
+import com.jake.messagesystem.dto.websocket.outbound.WriteMessage;
 import com.jake.messagesystem.service.TerminalService;
 import com.jake.messagesystem.util.JsonUtil;
 import jakarta.websocket.Session;
@@ -12,7 +12,7 @@ public class WebSocketSender {
         this.terminalService = terminalService;
     }
 
-    public void sendMessage(Session session, WriteMessageRequest message) {
+    public void sendMessage(Session session, WriteMessage message) {
         if (session != null && session.isOpen()) {
             JsonUtil.toJson(message).ifPresent(payload -> session.getAsyncRemote().sendText(payload, result -> {
                 if (!result.isOK()) {
