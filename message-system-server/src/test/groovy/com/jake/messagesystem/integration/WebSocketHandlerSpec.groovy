@@ -1,8 +1,13 @@
-package com.jake.messagesystem.handler
+package com.jake.messagesystem.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jake.messagesystem.MessageSystemApplication
-import com.jake.messagesystem.dto.websocket.inbound.WriteMessageRequest
+import com.jake.messagesystem.dto.ChannelId
+import com.jake.messagesystem.dto.UserId
+import com.jake.messagesystem.dto.websocket.inbound.WriteMessage
+import com.jake.messagesystem.service.ChannelService
+import com.jake.messagesystem.service.UserService
+import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -22,8 +27,8 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 
-@SpringBootTest(classes = MessageSystemApplication, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@SpringBootTest(classes = MessageSystemApplication, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class WebSocketHandlerSpec extends Specification {
     @LocalServerPort
     int port
@@ -31,48 +36,46 @@ class WebSocketHandlerSpec extends Specification {
     @Autowired
     ObjectMapper objectMapper
 
+    @Autowired
+    UserService userService
+
+    @SpringBean
+    ChannelService channelService = Stub()
+
     def "Group Chat Basic Test"() {
         given:
         register("testuserA", "testpassA")
         register("testuserB", "testpassB")
-        register("testuserC", "testpassC")
         def sessionIdA = login("testuserA", "testpassA")
         def sessionIdB = login("testuserB", "testpassB")
-        def sessionIdC = login("testuserC", "testpassC")
-        def (clientA, clientB, clientC) = [createClient(sessionIdA), createClient(sessionIdB), createClient(sessionIdC)]
+        def (clientA, clientB) = [createClient(sessionIdA), createClient(sessionIdB)]
+
+        channelService.getParticipantIds(_ as ChannelId) >> List.of(
+                userService.getUserId("testuserA").get(),
+                userService.getUserId("testuserB").get()
+        )
+        channelService.isOnline(_ as UserId, _ as ChannelId) >> true
 
         when:
-        clientA.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessageRequest("clientA", "안녕하세요. A 입니다."))))
-        clientB.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessageRequest("clientB", "안녕하세요. B 입니다."))))
-        clientC.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessageRequest("clientC", "안녕하세요. C 입니다."))))
+        clientA.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. A 입니다."))))
+        clientB.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. B 입니다."))))
 
         then:
-        //  순서를 보장하지 않으므로 실패하는 케이스
-//        clientA.queue.isEmpty()
-//        clientB.queue.poll(1, TimeUnit.SECONDS).contains("clientA")
-//        clientC.queue.poll(1, TimeUnit.SECONDS).contains("clientA")
-
         // 순서 상관 없이 테스트
-        def resultA = clientA.queue.poll(1, TimeUnit.SECONDS) + clientA.queue.poll(1, TimeUnit.SECONDS)
-        def resultB = clientB.queue.poll(1, TimeUnit.SECONDS) + clientB.queue.poll(1, TimeUnit.SECONDS)
-        def resultC = clientC.queue.poll(1, TimeUnit.SECONDS) + clientC.queue.poll(1, TimeUnit.SECONDS)
-
-        resultA.contains("clientB") && resultA.contains("clientC")
-        resultB.contains("clientA") && resultA.contains("clientC")
-        resultC.contains("clientA") && resultA.contains("clientB")
+        def resultA = clientA.queue.poll(1, TimeUnit.SECONDS)
+        def resultB = clientB.queue.poll(1, TimeUnit.SECONDS)
+        resultA.contains("testuserB")
+        resultB.contains("testuserA")
 
         and:
         clientA.queue.isEmpty()
         clientB.queue.isEmpty()
-        clientC.queue.isEmpty()
 
         cleanup:
         unRegister(sessionIdA)
         unRegister(sessionIdB)
-        unRegister(sessionIdC)
         clientA.session?.close()
         clientB.session?.close()
-        clientC.session?.close()
     }
 
     def register(String username, String password) {

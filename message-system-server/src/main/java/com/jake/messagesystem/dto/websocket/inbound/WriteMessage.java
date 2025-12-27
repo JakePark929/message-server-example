@@ -3,20 +3,21 @@ package com.jake.messagesystem.dto.websocket.inbound;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.jake.messagesystem.constants.MessageType;
+import com.jake.messagesystem.dto.ChannelId;
 
-public class WriteMessageRequest extends BaseRequest {
-    private final String username;
+public class WriteMessage extends BaseRequest {
+    private final ChannelId channelId;
     private final String content;
 
     @JsonCreator
-    public WriteMessageRequest(@JsonProperty("username") String username, @JsonProperty("content") String content) {
+    public WriteMessage(@JsonProperty("channelId") ChannelId channelId, @JsonProperty("content") String content) {
         super(MessageType.WRITE_MESSAGE);
-        this.username = username;
+        this.channelId = channelId;
         this.content = content;
     }
 
-    public String getUsername() {
-        return username;
+    public ChannelId getChannelId() {
+        return channelId;
     }
 
     public String getContent() {

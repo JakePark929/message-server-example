@@ -1,6 +1,6 @@
 package com.jake.messagesystem.handler.websocket;
 
-import com.jake.messagesystem.constants.Constants;
+import com.jake.messagesystem.constants.IdKey;
 import com.jake.messagesystem.dto.Connection;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.FetchConnectionsRequest;
@@ -24,7 +24,7 @@ public class FetchConnectionRequestHandler implements BaseRequestHandler<FetchCo
 
     @Override
     public void handleRequest(WebSocketSession senderSession, FetchConnectionsRequest request) {
-        final UserId senderUserId = (UserId) senderSession.getAttributes().get(Constants.USER_ID.getValue());
+        final UserId senderUserId = (UserId) senderSession.getAttributes().get(IdKey.USER_ID.getValue());
 
         final List<Connection> connections = userConnectionService.getUsersByStatus(senderUserId, request.getStatus()).stream().map(user -> new Connection(user.username(), request.getStatus())).toList();
         webSocketSessionManager.sendMessage(senderSession, new FetchConnectionsResponse(connections));

@@ -1,6 +1,6 @@
 package com.jake.messagesystem.handler.websocket;
 
-import com.jake.messagesystem.constants.Constants;
+import com.jake.messagesystem.constants.IdKey;
 import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.FetchUserInviteCodeRequest;
@@ -23,7 +23,7 @@ public class FetchUserInviteCodeRequestHandler implements BaseRequestHandler<Fet
 
     @Override
     public void handleRequest(WebSocketSession senderSession, FetchUserInviteCodeRequest request) {
-        final UserId senderUserId = (UserId) senderSession.getAttributes().get(Constants.USER_ID.getValue());
+        final UserId senderUserId = (UserId) senderSession.getAttributes().get(IdKey.USER_ID.getValue());
         userService.getInviteCode(senderUserId).ifPresentOrElse(
                 inviteCode -> webSocketSessionManager.sendMessage(senderSession, new FetchUserInviteCodeResponse(inviteCode)),
                 () -> webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.FETCH_USER_INVITE_CODE_REQUEST, "Fetch user invite code failed."))
