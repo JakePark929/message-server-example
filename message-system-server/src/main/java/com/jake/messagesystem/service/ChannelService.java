@@ -4,6 +4,7 @@ import com.jake.messagesystem.constants.ResultType;
 import com.jake.messagesystem.constants.UserConnectionStatus;
 import com.jake.messagesystem.dto.Channel;
 import com.jake.messagesystem.dto.ChannelId;
+import com.jake.messagesystem.dto.InviteCode;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.projection.ChannelTitleProjection;
 import com.jake.messagesystem.entity.ChannelEntity;
@@ -36,6 +37,17 @@ public class ChannelService {
         this.userConnectionService = userConnectionService;
         this.channelRepository = channelRepository;
         this.userChannelRepository = userChannelRepository;
+    }
+
+    public Optional<InviteCode> getInviteCode(ChannelId channelId) {
+        final Optional<InviteCode> inviteCode = channelRepository.findChannelInviteCodeByChannelId(channelId.id())
+                .map(projection -> new InviteCode(projection.getInviteCode()));
+
+        if (inviteCode.isEmpty()) {
+            log.warn("Invite code is not exist. channelId: {}", channelId);
+        }
+
+        return inviteCode;
     }
 
     public boolean isJoined(ChannelId channelId, UserId userId) {

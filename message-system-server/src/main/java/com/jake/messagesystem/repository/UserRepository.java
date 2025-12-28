@@ -20,7 +20,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findByUsername(@NonNull String username);
     List<UserIdProjection> findByUsernameIn(@NonNull Collection<String> usernames);
     Optional<UsernameProjection> findByUserId(@NonNull Long userId);
-    Optional<UserEntity> findByConnectionInviteCode(@NonNull String connectionInviteCode);
+    Optional<UserEntity> findByInviteCode(@NonNull String inviteCode);
     Optional<InviteCodeProjection> findInviteCodeByUserId(@NonNull Long userId);
     Optional<CountProjection> findCountByUserId(@NonNull Long userId);
 

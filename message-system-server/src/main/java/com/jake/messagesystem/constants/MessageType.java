@@ -3,6 +3,8 @@ package com.jake.messagesystem.constants;
 public class MessageType {
     public static final String FETCH_USER_INVITE_CODE_REQUEST = "FETCH_USER_INVITE_CODE_REQUEST";
     public static final String FETCH_USER_INVITE_CODE_RESPONSE = "FETCH_USER_INVITE_CODE_RESPONSE";
+    public static final String FETCH_CHANNEL_INVITE_CODE_REQUEST = "FETCH_CHANNEL_INVITE_CODE_REQUEST";
+    public static final String FETCH_CHANNEL_INVITE_CODE_RESPONSE = "FETCH_CHANNEL_INVITE_CODE_RESPONSE";
     public static final String FETCH_CONNECTIONS_REQUEST = "FETCH_CONNECTIONS_REQUEST";
     public static final String FETCH_CONNECTIONS_RESPONSE = "FETCH_CONNECTIONS_RESPONSE";
     public static final String INVITE_REQUEST = "INVITE_REQUEST";
