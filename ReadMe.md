@@ -3,7 +3,8 @@
 웹소켓 기반 멀티모듈 메세지 시스템 프로젝트 입니다.  
 CLI 클라이언트와 웹소켓 서버로 구성되어 있습니다.
 
-### 채팅 클라이언트 CLI 명령어 
+### 채팅 클라이언트 CLI 명령어
+
 ```shell
 $ /register [username] [password] : 회원 가입 
 $ /unregister : 회원 탈퇴
@@ -15,12 +16,12 @@ $ /exit : 로그아웃 후 종료
 
 ## 🧑‍💻 Tech Stack
 
-|   구분   | 기술명                                                                                            |
-|:------:|:-----------------------------------------------------------------------------------------------|
-| Common | - Java 17.0.13 (Eclipse Temurin)                                                               |
-| Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine)                              |
-| Server | - SpringBoot 3.4.11(LTS) <br/> - Spring Security <br/> - WebSocket <br/> - Spock 4 (테스트 프레임워크) |
-| Infra  | - MySQL 8.0.40 (RDB) <br/> - Redis 7.4.1                                                       |
+|   구분   | 기술명                                                                                             |
+|:------:|:------------------------------------------------------------------------------------------------|
+| Common | - Java 17.0.13 (Eclipse Temurin)                                                                |
+| Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine)                               |
+| Server | - SpringBoot 3.4.11 (LTS) <br/> - Spring Security <br/> - WebSocket <br/> - Spock 4 (테스트 프레임워크) |
+| Infra  | - MySQL 8.0.40 (RDB) <br/> - Redis 7.4.1                                                        |
 
 > Tyrus = Jakarta WebSocket(JSR 356)의 표준 구현체
 

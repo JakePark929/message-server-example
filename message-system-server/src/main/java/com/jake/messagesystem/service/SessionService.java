@@ -13,6 +13,9 @@ import org.springframework.session.SessionRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -36,20 +39,29 @@ public class SessionService {
         return authentication.getName();
     }
 
-    public boolean isOnline(UserId userId, ChannelId channelId) {
-        String channelIdKey = buildChannelIdKey(userId);
-
+    public List<UserId> getOnlineParticipantUserIds(ChannelId channelId, List<UserId> userIds) {
+        final List<String> channelIdKeys = userIds.stream().map(this::buildChannelIdKey).toList();
         try {
-            String chId = stringRedisTemplate.opsForValue().get(channelIdKey);
+            List<String> channelIds = stringRedisTemplate.opsForValue().multiGet(channelIdKeys);
 
-            if (chId != null && chId.equals(channelId.id().toString())) {
-                return true;
+            if (channelIds != null) {
+                List<UserId> onlineParticipantUserIds = new ArrayList<>(channelIds.size());
+                final String chId = channelId.id().toString();
+                for (int idx = 0; idx < userIds.size(); idx++) {
+                    String value = channelIds.get(idx);
+
+                    if (value != null && value.equals(chId)) {
+                        onlineParticipantUserIds.add(userIds.get(idx));
+                    }
+                }
+
+                return onlineParticipantUserIds;
             }
         } catch (Exception e) {
-            log.error("Redis get failed. key: {}, cause: {}", channelIdKey, e.getMessage());
+            log.error("Redis mget failed. key: {}, cause: {}", channelIdKeys, e.getMessage());
         }
 
-        return false;
+        return Collections.emptyList();
     }
 
     public boolean setActiveChannel(UserId userId, ChannelId channelId) {

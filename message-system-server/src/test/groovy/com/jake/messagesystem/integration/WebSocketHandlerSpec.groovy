@@ -3,7 +3,6 @@ package com.jake.messagesystem.integration
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jake.messagesystem.MessageSystemApplication
 import com.jake.messagesystem.dto.ChannelId
-import com.jake.messagesystem.dto.UserId
 import com.jake.messagesystem.dto.websocket.inbound.WriteMessage
 import com.jake.messagesystem.service.ChannelService
 import com.jake.messagesystem.service.UserService
@@ -46,36 +45,44 @@ class WebSocketHandlerSpec extends Specification {
         given:
         register("testuserA", "testpassA")
         register("testuserB", "testpassB")
+        register("testuserC", "testpassC")
         def sessionIdA = login("testuserA", "testpassA")
         def sessionIdB = login("testuserB", "testpassB")
-        def (clientA, clientB) = [createClient(sessionIdA), createClient(sessionIdB)]
+        def sessionIdC = login("testuserC", "testpassC")
+        def (clientA, clientB, clientC) = [createClient(sessionIdA), createClient(sessionIdB), createClient(sessionIdC)]
 
-        channelService.getParticipantIds(_ as ChannelId) >> List.of(
+        channelService.getOnlineParticipantIds(_ as ChannelId) >> List.of(
                 userService.getUserId("testuserA").get(),
-                userService.getUserId("testuserB").get()
+                userService.getUserId("testuserB").get(),
+                userService.getUserId("testuserC").get()
         )
-        channelService.isOnline(_ as UserId, _ as ChannelId) >> true
 
         when:
         clientA.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. A 입니다."))))
         clientB.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. B 입니다."))))
+        clientC.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. C 입니다."))))
 
         then:
         // 순서 상관 없이 테스트
-        def resultA = clientA.queue.poll(1, TimeUnit.SECONDS)
-        def resultB = clientB.queue.poll(1, TimeUnit.SECONDS)
-        resultA.contains("testuserB")
-        resultB.contains("testuserA")
+        def resultA = clientA.queue.poll(1, TimeUnit.SECONDS) + clientA.queue.poll(1, TimeUnit.SECONDS)
+        def resultB = clientB.queue.poll(1, TimeUnit.SECONDS) + clientB.queue.poll(1, TimeUnit.SECONDS)
+        def resultC = clientC.queue.poll(1, TimeUnit.SECONDS) + clientC.queue.poll(1, TimeUnit.SECONDS)
+        resultA.contains("testuserB") && resultA.contains("testuserC")
+        resultB.contains("testuserA") && resultB.contains("testuserC")
+        resultC.contains("testuserA") && resultC.contains("testuserB")
 
         and:
         clientA.queue.isEmpty()
         clientB.queue.isEmpty()
+        clientC.queue.isEmpty()
 
         cleanup:
         unRegister(sessionIdA)
         unRegister(sessionIdB)
+        unRegister(sessionIdC)
         clientA.session?.close()
         clientB.session?.close()
+        clientC.session?.close()
     }
 
     def register(String username, String password) {
