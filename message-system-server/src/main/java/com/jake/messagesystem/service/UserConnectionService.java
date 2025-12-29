@@ -109,7 +109,7 @@ public class UserConnectionService {
 
             case PENDING, REJECTED -> {
                 log.info("{} invites {} but does not deliver the invitation request.", inviterUserId, partnerUsername);
-                yield Pair.of(Optional.of(partnerUserId), "Already Invited to " + partnerUsername);
+                yield Pair.of(Optional.empty(), "Already Invited to " + partnerUsername);
             }
         };
     }
