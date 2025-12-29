@@ -167,4 +167,8 @@ public class ChannelService {
 
         return Pair.of(title, ResultType.SUCCESS);
     }
+
+    public boolean leave(UserId userId) {
+        return sessionService.removeActiveChannel(userId);
+    }
 }
