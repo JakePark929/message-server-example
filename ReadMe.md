@@ -10,6 +10,23 @@ $ /register [username] [password] : 회원 가입
 $ /unregister : 회원 탈퇴
 $ /login [username] [password] : 로그인
 $ /logout : 로그아웃
+
+# 채팅 서비스
+$ /invite-code user : 사용자 초대코드 확인
+$ /invite-code channel [channelId] : 채널 초대 코드 확인
+$ /invite [inviteCode] : 연결 초대 
+$ /accept [username] : 연결 수락
+$ /reject [username] : 연결 거절
+$ /disconnect [username] : 연결 해제
+$ /connections : 연결 리스트
+$ /pending : 연결 대기 리스트
+$ /channels : 채널 리스트
+$ /create [title] [username1] [username2] ... : 채널 생성
+$ /join [inviteCode] : 초대코드 채널 입장
+$ /enter [channelId]: 채널 입장
+$ /leave : 나가기
+$ /quit [channelId] : 채널 탈퇴
+
 $ /clear : 터미널 초기화
 $ /exit : 로그아웃 후 종료
 ```
