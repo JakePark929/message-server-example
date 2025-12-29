@@ -114,6 +114,7 @@ public class ChannelService {
         }
     }
 
+    @Transactional
     public Pair<Optional<Channel>, ResultType> join(InviteCode inviteCode, UserId userId) {
         final Optional<Channel> ch = getChannel(inviteCode);
         if (ch.isEmpty()) {
@@ -170,5 +171,26 @@ public class ChannelService {
 
     public boolean leave(UserId userId) {
         return sessionService.removeActiveChannel(userId);
+    }
+
+    @Transactional
+    public ResultType quit(ChannelId channelId, UserId userId) {
+        if (!isJoined(channelId, userId)) {
+
+            return ResultType.NOT_JOINED;
+        }
+
+        final ChannelEntity channelEntity = channelRepository.findForUpdateByChannelId(channelId.id())
+                .orElseThrow(() -> new EntityNotFoundException("Invalid channelId: " + channelId.id()));
+
+        if (channelEntity.getHeadCount() > 0) {
+            channelEntity.setHeadCount(channelEntity.getHeadCount() - 1);
+        } else {
+            log.error("Count is already zero. channelId: {}, userId: {}", channelId, userId);
+        }
+
+        userChannelRepository.deleteByUserIdAndChannelId(userId.id(), channelId.id());
+
+        return ResultType.SUCCESS;
     }
 }
