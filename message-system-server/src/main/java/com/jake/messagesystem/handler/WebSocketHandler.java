@@ -62,6 +62,4 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
         jsonUtil.fromJson(payload, BaseRequest.class).ifPresent(msg -> requestDispatcher.dispatchRequest(senderSession, msg));
     }
-
-
 }

@@ -7,6 +7,8 @@ public class MessageType {
     public static final String FETCH_CHANNEL_INVITE_CODE_RESPONSE = "FETCH_CHANNEL_INVITE_CODE_RESPONSE";
     public static final String FETCH_CONNECTIONS_REQUEST = "FETCH_CONNECTIONS_REQUEST";
     public static final String FETCH_CONNECTIONS_RESPONSE = "FETCH_CONNECTIONS_RESPONSE";
+    public static final String FETCH_CHANNELS_REQUEST = "FETCH_CHANNELS_REQUEST";
+    public static final String FETCH_CHANNELS_RESPONSE = "FETCH_CHANNELS_RESPONSE";
     public static final String INVITE_REQUEST = "INVITE_REQUEST";
     public static final String INVITE_RESPONSE = "INVITE_RESPONSE";
     public static final String ACCEPT_REQUEST = "ACCEPT_REQUEST";
