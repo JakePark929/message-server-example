@@ -11,6 +11,8 @@ import com.jake.messagesystem.service.UserService;
 import com.jake.messagesystem.service.WebSocketService;
 import com.jake.messagesystem.util.JsonUtil;
 
+import java.io.IOError;
+
 public class MessageClient {
     public static void main(String[] args) {
         final String BASE_URL = "localhost:8080";
@@ -38,19 +40,28 @@ public class MessageClient {
         terminalService.printSystemMessage("'/help' Help for commands. ex) /help");
 
         while (true) {
-            String input = terminalService.readLine("Enter message: ");
+            try {
+                String input = terminalService.readLine("Enter message: ");
 
-            if (!input.isEmpty() && input.charAt(0) == '/') {
-                String[] parts = input.split(" ", 2);
-                String command = parts[0].substring(1);
-                String argument = parts.length > 1 ? parts[1] : "";
+                if (!input.isEmpty() && input.charAt(0) == '/') {
+                    String[] parts = input.split(" ", 2);
+                    String command = parts[0].substring(1);
+                    String argument = parts.length > 1 ? parts[1] : "";
 
-                if (!commandHandler.process(command, argument)) {
-                    break;
+                    if (!commandHandler.process(command, argument)) {
+                        break;
+                    }
+                } else if (!input.isEmpty() && userService.isInChannel()) {
+                    terminalService.printMessage("<me>", input.trim());
+                    webSocketService.sendMessage(new WriteMessage(userService.getChannelId(), input));
                 }
-            } else if (!input.isEmpty() && userService.isInChannel()) {
-                terminalService.printMessage("<me>", input.trim());
-                webSocketService.sendMessage(new WriteMessage(userService.getChannelId(), input));
+            } catch (IOError e) {
+                terminalService.flush();
+                commandHandler.process("exit","");
+
+                return;
+            } catch (NumberFormatException e) {
+                terminalService.printSystemMessage("Invalid input: " + e.getMessage());
             }
         }
     }

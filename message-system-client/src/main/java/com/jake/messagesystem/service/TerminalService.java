@@ -4,6 +4,7 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import org.jline.utils.InfoCmp;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -34,12 +35,12 @@ public class TerminalService {
      * 입력 줄을 읽되, 사용자가 친 입력은 화면에 남지 않는다.
      */
     public String readLine(String prompt) {
-        String input = lineReader.readLine(prompt, (char) 0);
+        String input = lineReader.readLine(prompt);
 
         // ✅ 입력 줄 지우기
-        terminal.puts(org.jline.utils.InfoCmp.Capability.cursor_up);
-        terminal.puts(org.jline.utils.InfoCmp.Capability.delete_line);
-        terminal.flush();
+        terminal.puts(InfoCmp.Capability.cursor_up);
+        terminal.puts(InfoCmp.Capability.delete_line);
+        flush();
 
         return input;
     }
@@ -57,6 +58,12 @@ public class TerminalService {
     /** 터미널 전체 클리어. */
     public void clearTerminal() {
         terminal.puts(org.jline.utils.InfoCmp.Capability.clear_screen);
-        terminal.flush();
+        flush();
+    }
+
+    public void flush() {
+        if (terminal != null) {
+            terminal.flush();
+        }
     }
 }
