@@ -11,6 +11,7 @@ import com.jake.messagesystem.entity.ChannelEntity;
 import com.jake.messagesystem.entity.UserChannelEntity;
 import com.jake.messagesystem.repository.ChannelRepository;
 import com.jake.messagesystem.repository.UserChannelRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
@@ -70,6 +71,11 @@ public class ChannelService {
                 .toList();
     }
 
+    public Optional<Channel> getChannel(InviteCode inviteCode) {
+        return channelRepository.findChannelByInviteCode(inviteCode.code())
+                .map(projection -> new Channel(new ChannelId(projection.getChannelId()), projection.getTitle(), projection.getHeadCount()));
+    }
+
     @Transactional
     public Pair<Optional<Channel>, ResultType> create(UserId senderUSerId, List<UserId> participantIds, String title) {
         if (title == null || title.isEmpty()) {
@@ -108,9 +114,37 @@ public class ChannelService {
         }
     }
 
+    public Pair<Optional<Channel>, ResultType> join(InviteCode inviteCode, UserId userId) {
+        final Optional<Channel> ch = getChannel(inviteCode);
+        if (ch.isEmpty()) {
+
+            return Pair.of(Optional.empty(), ResultType.NOT_FOUND);
+        }
+
+        final Channel channel = ch.get();
+        if (isJoined(channel.channelId(), userId)) {
+
+            return Pair.of(Optional.empty(), ResultType.ALREADY_JOINED);
+        } else if (channel.headCount() >= LIMIT_HEAD_COUNT) {
+
+            return Pair.of(Optional.empty(), ResultType.OVER_LIMIT);
+        }
+
+        final ChannelEntity channelEntity = channelRepository.findForUpdateByChannelId(channel.channelId().id())
+                .orElseThrow(() -> new EntityNotFoundException("Invalid channelId: " + channel.channelId().id()));
+
+        if (channelEntity.getHeadCount() < LIMIT_HEAD_COUNT) {
+            channelEntity.setHeadCount(channelEntity.getHeadCount() + 1);
+            userChannelRepository.save(new UserChannelEntity(userId.id(), channel.channelId().id(), 0));
+        }
+
+        return Pair.of(Optional.of(channel), ResultType.SUCCESS);
+    }
+
     public Pair<Optional<String>, ResultType> enter(ChannelId channelId, UserId userId) {
         if (!isJoined(channelId, userId)) {
             log.warn("Enter channel failed. User not joined. channelId: {}, userId: {}", channelId, userId);
+
             return Pair.of(Optional.empty(), ResultType.NOT_JOINED);
         }
 
@@ -120,12 +154,14 @@ public class ChannelService {
 
         if (title.isEmpty()) {
             log.warn("Enter channel failed. Channel does not exist. channelId: {}, userId: {}", channelId, userId);
+
             return Pair.of(Optional.empty(), ResultType.NOT_FOUND);
         }
 
         boolean activated = sessionService.setActiveChannel(userId, channelId);
         if (!activated) {
             log.error("Enter channel failed. Session update failed. channelId: {}, userId: {}", channelId, userId);
+
             return Pair.of(Optional.empty(), ResultType.FAILED);
         }
 
