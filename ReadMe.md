@@ -3,24 +3,42 @@
 웹소켓 기반 멀티모듈 메세지 시스템 프로젝트 입니다.  
 CLI 클라이언트와 웹소켓 서버로 구성되어 있습니다.
 
-### 채팅 클라이언트 CLI 명령어 
+### 채팅 클라이언트 CLI 명령어
+
 ```shell
 $ /register [username] [password] : 회원 가입 
 $ /unregister : 회원 탈퇴
 $ /login [username] [password] : 로그인
 $ /logout : 로그아웃
+
+# 채팅 서비스
+$ /invite-code user : 사용자 초대코드 확인
+$ /invite-code channel [channelId] : 채널 초대 코드 확인
+$ /invite [inviteCode] : 연결 초대 
+$ /accept [username] : 연결 수락
+$ /reject [username] : 연결 거절
+$ /disconnect [username] : 연결 해제
+$ /connections : 연결 리스트
+$ /pending : 연결 대기 리스트
+$ /channels : 채널 리스트
+$ /create [title] [username1] [username2] ... : 채널 생성
+$ /join [inviteCode] : 초대코드 채널 입장
+$ /enter [channelId]: 채널 입장
+$ /leave : 나가기
+$ /quit [channelId] : 채널 탈퇴
+
 $ /clear : 터미널 초기화
 $ /exit : 로그아웃 후 종료
 ```
 
 ## 🧑‍💻 Tech Stack
 
-|   구분   | 기술명                                                                                            |
-|:------:|:-----------------------------------------------------------------------------------------------|
-| Common | - Java 17.0.13 (Eclipse Temurin)                                                               |
-| Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine)                              |
-| Server | - SpringBoot 3.4.11(LTS) <br/> - Spring Security <br/> - WebSocket <br/> - Spock 4 (테스트 프레임워크) |
-| Infra  | - MySQL 8.0.40 (RDB) <br/> - Redis 7.4.1                                                       |
+|   구분   | 기술명                                                                                             |
+|:------:|:------------------------------------------------------------------------------------------------|
+| Common | - Java 17.0.13 (Eclipse Temurin)                                                                |
+| Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine)                               |
+| Server | - SpringBoot 3.4.11 (LTS) <br/> - Spring Security <br/> - WebSocket <br/> - Spock 4 (테스트 프레임워크) |
+| Infra  | - MySQL 8.0.40 (RDB) <br/> - Redis 7.4.1                                                        |
 
 > Tyrus = Jakarta WebSocket(JSR 356)의 표준 구현체
 

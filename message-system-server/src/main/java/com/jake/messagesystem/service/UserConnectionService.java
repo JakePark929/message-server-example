@@ -31,6 +31,7 @@ public class UserConnectionService {
         this.userConnectionLimitService = userConnectionLimitService;
     }
 
+    @Transactional(readOnly = true)
     public List<User> getUsersByStatus(UserId userId, UserConnectionStatus status) {
         final List<UserIdUsernameInviterUserIdProjection> usersA = userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id(), status);
         final List<UserIdUsernameInviterUserIdProjection> usersB = userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id(), status);
@@ -51,6 +52,14 @@ public class UserConnectionService {
         return userConnectionRepository.findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(Long.min(inviterUserId.id(), partnerUserId.id()), Long.max(inviterUserId.id(), partnerUserId.id()))
                 .map(status -> UserConnectionStatus.valueOf(status.getStatus()))
                 .orElse(UserConnectionStatus.NONE);
+    }
+
+    @Transactional(readOnly = true)
+    public long countConnectionStatus(UserId senderUserId, List<UserId> partnerIds, UserConnectionStatus status) {
+        final List<Long> ids = partnerIds.stream().map(UserId::id).toList();
+
+        return userConnectionRepository.countByPartnerAUserIdAndPartnerBUserIdInAndStatus(senderUserId.id(), ids, status) +
+                userConnectionRepository.countByPartnerBUserIdAndPartnerAUserIdInAndStatus(senderUserId.id(), ids, status);
     }
 
     @Transactional
@@ -100,7 +109,7 @@ public class UserConnectionService {
 
             case PENDING, REJECTED -> {
                 log.info("{} invites {} but does not deliver the invitation request.", inviterUserId, partnerUsername);
-                yield Pair.of(Optional.of(partnerUserId), "Already Invited to " + partnerUsername);
+                yield Pair.of(Optional.empty(), "Already Invited to " + partnerUsername);
             }
         };
     }

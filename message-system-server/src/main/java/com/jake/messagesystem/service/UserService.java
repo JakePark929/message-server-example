@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -37,13 +38,18 @@ public class UserService {
         return userRepository.findByUsername(username).map(userEntity -> new UserId(userEntity.getUserId()));
     }
 
+    public List<UserId> getUserIds(List<String> usernames) {
+        return userRepository.findByUsernameIn(usernames).stream()
+                .map(projection -> new UserId(projection.getUserId())).toList();
+    }
+
     public Optional<User> getUser(InviteCode inviteCode) {
-        return userRepository.findByConnectionInviteCode(inviteCode.code())
+        return userRepository.findByInviteCode(inviteCode.code())
                 .map(entity -> new User(new UserId(entity.getUserId()), entity.getUsername()));
     }
 
     public Optional<InviteCode> getInviteCode(UserId userId) {
-        return userRepository.findInviteCodeByUserId(userId.id()).map(inviteCode -> new InviteCode(inviteCode.getConnectionInviteCode()));
+        return userRepository.findInviteCodeByUserId(userId.id()).map(inviteCode -> new InviteCode(inviteCode.getInviteCode()));
     }
 
     @Transactional

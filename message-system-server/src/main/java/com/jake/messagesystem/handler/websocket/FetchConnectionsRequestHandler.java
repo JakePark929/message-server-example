@@ -13,11 +13,11 @@ import org.springframework.web.socket.WebSocketSession;
 import java.util.List;
 
 @Component
-public class FetchConnectionRequestHandler implements BaseRequestHandler<FetchConnectionsRequest> {
+public class FetchConnectionsRequestHandler implements BaseRequestHandler<FetchConnectionsRequest> {
     private final UserConnectionService userConnectionService;
     private final WebSocketSessionManager webSocketSessionManager;
 
-    public FetchConnectionRequestHandler(UserConnectionService userConnectionService, WebSocketSessionManager webSocketSessionManager) {
+    public FetchConnectionsRequestHandler(UserConnectionService userConnectionService, WebSocketSessionManager webSocketSessionManager) {
         this.userConnectionService = userConnectionService;
         this.webSocketSessionManager = webSocketSessionManager;
     }

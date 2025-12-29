@@ -7,16 +7,23 @@ import com.jake.messagesystem.dto.websocket.outbound.AcceptRequest;
 import com.jake.messagesystem.dto.websocket.outbound.CreateRequest;
 import com.jake.messagesystem.dto.websocket.outbound.DisconnectRequest;
 import com.jake.messagesystem.dto.websocket.outbound.EnterRequest;
+import com.jake.messagesystem.dto.websocket.outbound.FetchChannelInviteCodeRequest;
+import com.jake.messagesystem.dto.websocket.outbound.FetchChannelsRequest;
 import com.jake.messagesystem.dto.websocket.outbound.FetchConnectionsRequest;
 import com.jake.messagesystem.dto.websocket.outbound.FetchUserInviteCodeRequest;
 import com.jake.messagesystem.dto.websocket.outbound.InviteRequest;
+import com.jake.messagesystem.dto.websocket.outbound.JoinRequest;
+import com.jake.messagesystem.dto.websocket.outbound.LeaveRequest;
+import com.jake.messagesystem.dto.websocket.outbound.QuitRequest;
 import com.jake.messagesystem.dto.websocket.outbound.RejectRequest;
 import com.jake.messagesystem.service.RestApiService;
 import com.jake.messagesystem.service.TerminalService;
 import com.jake.messagesystem.service.UserService;
 import com.jake.messagesystem.service.WebSocketService;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -58,8 +65,12 @@ public class CommandHandler {
         commands.put("disconnect", this::disconnect);
         commands.put("connections", this::connections);
         commands.put("pending", this::pending);
+        commands.put("channels", this::channels);
         commands.put("create", this::create);
+        commands.put("join", this::join);
         commands.put("enter", this::enter);
+        commands.put("leave", this::leave);
+        commands.put("quit", this::quit);
 
         commands.put("clear", this::clear);
         commands.put("exit", this::exit);
@@ -120,9 +131,14 @@ public class CommandHandler {
     }
 
     private Boolean inviteCode(String[] params) {
-        if (userService.isInLobby()) {
-            webSocketService.sendMessage(new FetchUserInviteCodeRequest());
-            terminalService.printSystemMessage("Get invite code for mine.");
+        if (userService.isInLobby() && params.length > 0) {
+            if ("user".equals(params[0])) {
+                webSocketService.sendMessage(new FetchUserInviteCodeRequest());
+                terminalService.printSystemMessage("Get invite code for mine.");
+            } else if ("channel".equals(params[0]) && params.length > 1) {
+                webSocketService.sendMessage(new FetchChannelInviteCodeRequest(new ChannelId(Long.valueOf(params[1]))));
+                terminalService.printSystemMessage("Get invite code for channel.");
+            }
         }
 
         return true;
@@ -182,10 +198,30 @@ public class CommandHandler {
         return true;
     }
 
+    private Boolean channels(String[] params) {
+        if (userService.isInLobby()) {
+            webSocketService.sendMessage(new FetchChannelsRequest());
+            terminalService.printSystemMessage("Request channels.");
+        }
+
+        return true;
+    }
+
     private Boolean create(String[] params) {
-        if (userService.isInLobby() && params.length > 1) {
-            webSocketService.sendMessage(new CreateRequest(params[0], params[1]));
+        if (userService.isInLobby() && params.length > 1 && params.length < 100) {
+            webSocketService.sendMessage(new CreateRequest(params[0], List.of(Arrays.copyOfRange(params, 1, params.length))));
             terminalService.printSystemMessage("Request create channel.");
+        } else {
+            terminalService.printSystemMessage("Only 1 to 99 users can be included.");
+        }
+
+        return true;
+    }
+
+    private Boolean join(String[] params) {
+        if (userService.isInLobby() && params.length > 0) {
+            webSocketService.sendMessage(new JoinRequest(new InviteCode(params[0])));
+            terminalService.printSystemMessage("Request join channel.");
         }
 
         return true;
@@ -193,13 +229,26 @@ public class CommandHandler {
 
     private Boolean enter(String[] params) {
         if (userService.isInLobby() && params.length > 0) {
-            try {
-                ChannelId channelId = new ChannelId(Long.valueOf(params[0]));
-                webSocketService.sendMessage(new EnterRequest(channelId));
-                terminalService.printSystemMessage("Request enter channel.");
-            } catch (Exception e) {
-                terminalService.printSystemMessage(e.getMessage());
-            }
+            webSocketService.sendMessage(new EnterRequest(new ChannelId(Long.valueOf(params[0]))));
+            terminalService.printSystemMessage("Request enter channel.");
+        }
+
+        return true;
+    }
+
+    private Boolean leave(String[] params) {
+        if (userService.isInChannel()) {
+            webSocketService.sendMessage(new LeaveRequest());
+            terminalService.printSystemMessage("Request leave channel.");
+        }
+
+        return true;
+    }
+
+    private Boolean quit(String[] params) {
+        if (userService.isInLobby() && params.length > 0) {
+            webSocketService.sendMessage(new QuitRequest(new ChannelId(Long.valueOf(params[0]))));
+            terminalService.printSystemMessage("Request quit channel.");
         }
 
         return true;
@@ -223,25 +272,29 @@ public class CommandHandler {
         terminalService.printSystemMessage(
                 """
                         === Commands For Lobby ===
-                        - /register     Register a new user.                 ex) /register <Username> <Password>
-                        - /unregister   Unregister current user.             ex) /unregister
-                        - /login        Login.                               ex) /login <Username> <Password>
-                        - /invite-code  Get the invite code of mine.         ex) /invite-code
-                        - /invite       Invite a user to connect.            ex) /invite <Invite Code>
-                        - /accept       Accept the invite request received.  ex) /accept <Inviter Username>
-                        - /reject       Reject the invite request received.  ex) /reject <Inviter Username>
-                        - /disconnect   Disconnect user.                     ex) /disconnect <Connected Username>
-                        - /connections  View the list of connected users.    ex) /connections
-                        - /pending      View the list of pending invites.    ex) /pending
-                        - /create       Create a direct channel.             ex) /create <Title> <Username>
-                        - /enter        Enter the channel.                   ex) /enter <ChannelId>
+                        - /register     Register a new user.                            ex) /register <Username> <Password>
+                        - /unregister   Unregister current user.                        ex) /unregister
+                        - /login        Login.                                          ex) /login <Username> <Password>
+                        - /invite-code  Get the invite code of mine or joined channel.  ex) /invite-code user or /invite-code channel <ChannelId>
+                        - /invite       Invite a user to connect.                       ex) /invite <Invite Code>
+                        - /accept       Accept the invite request received.             ex) /accept <Inviter Username>
+                        - /reject       Reject the invite request received.             ex) /reject <Inviter Username>
+                        - /disconnect   Disconnect user.                                ex) /disconnect <Connected Username>
+                        - /connections  View the list of connected users.               ex) /connections
+                        - /pending      View the list of pending invites.               ex) /pending
+                        - /channels     View the list of joined channels.               ex) /channels
+                        - /create       Create a channel. (Up to 99 users)              ex) /create <Title> <Username1> <Username2> ...
+                        - /join         Join the channel.                               ex) /join <InviteCode>
+                        - /enter        Enter the channel.                              ex) /enter <ChannelId>
+                        - /quit         Quit the channel.                               ex) /quit <ChannelId>
                         
                         === Commands For Channel ===
+                        - /leave        Leave the channel.                              ex) /leave
                         
                         === Commands For Lobby/Channel ===
-                        - /logout       Logout.                              ex) /logout
-                        - /clear        Clear the terminal.                  ex) /clear
-                        - /exit         Exit the client.                     ex) /exit
+                        - /logout       Logout.                   ex) /logout
+                        - /clear        Clear the terminal.       ex) /clear
+                        - /exit         Exit the client.          ex) /exit
                         ====================
                         """
         );

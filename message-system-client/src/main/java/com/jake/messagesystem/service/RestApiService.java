@@ -14,7 +14,7 @@ import java.util.Optional;
 public class RestApiService {
     private final TerminalService terminalService;
     private final String url;
-    private String sessionId;
+    private String sessionId = "";
 
     public RestApiService(TerminalService terminalService, String url) {
         this.terminalService = terminalService;
