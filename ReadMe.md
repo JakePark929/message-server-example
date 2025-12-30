@@ -1,17 +1,22 @@
-# WebSocket 기반 메세지 서버
+# WebSocket 기반 실시간 메세지 서버
 
-웹소켓 기반 멀티모듈 메세지 시스템 프로젝트 입니다.  
-CLI 클라이언트와 웹소켓 서버로 구성되어 있습니다.
+- 실시간 메세지 시스템을 멀티모듈로 구현한 프로젝트 입니다.  
+- JLine CLI 클라이언트와 WebSocket 서버로 구성되어 있습니다.  
+- 로그인 세션 및 채널 입장 정보 저장을 위해 Redis 를 사용합니다.
+
+### 실행 화면
+![message-system](/data/message-system.gif)
 
 ### 채팅 클라이언트 CLI 명령어
 
 ```shell
+# 사용자 명령어
 $ /register [username] [password] : 회원 가입 
 $ /unregister : 회원 탈퇴
 $ /login [username] [password] : 로그인
 $ /logout : 로그아웃
 
-# 채팅 서비스
+# 채팅 명령어
 $ /invite-code user : 사용자 초대코드 확인
 $ /invite-code channel [channelId] : 채널 초대 코드 확인
 $ /invite [inviteCode] : 연결 초대 
@@ -27,6 +32,7 @@ $ /enter [channelId]: 채널 입장
 $ /leave : 나가기
 $ /quit [channelId] : 채널 탈퇴
 
+# 터미널 명령어
 $ /clear : 터미널 초기화
 $ /exit : 로그아웃 후 종료
 ```
