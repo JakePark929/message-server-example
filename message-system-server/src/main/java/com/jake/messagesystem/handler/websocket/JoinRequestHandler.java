@@ -9,7 +9,7 @@ import com.jake.messagesystem.dto.websocket.inbound.JoinRequest;
 import com.jake.messagesystem.dto.websocket.outbound.ErrorResponse;
 import com.jake.messagesystem.dto.websocket.outbound.JoinResponse;
 import com.jake.messagesystem.service.ChannelService;
-import com.jake.messagesystem.session.WebSocketSessionManager;
+import com.jake.messagesystem.service.ClientNotificationService;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
@@ -19,11 +19,11 @@ import java.util.Optional;
 @Component
 public class JoinRequestHandler implements BaseRequestHandler<JoinRequest> {
     private final ChannelService channelService;
-    private final WebSocketSessionManager webSocketSessionManager;
+    private final ClientNotificationService clientNotificationService;
 
-    public JoinRequestHandler(ChannelService channelService, WebSocketSessionManager webSocketSessionManager) {
+    public JoinRequestHandler(ChannelService channelService, ClientNotificationService clientNotificationService) {
         this.channelService = channelService;
-        this.webSocketSessionManager = webSocketSessionManager;
+        this.clientNotificationService = clientNotificationService;
     }
 
     @Override
@@ -34,14 +34,14 @@ public class JoinRequestHandler implements BaseRequestHandler<JoinRequest> {
         try {
             join = channelService.join(request.getInviteCode(), senderUserId);
         } catch (Exception e) {
-            webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.JOIN_REQUEST, ResultType.FAILED.getMessage()));
+            clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.JOIN_REQUEST, ResultType.FAILED.getMessage()));
 
             return;
         }
 
         join.getFirst().ifPresentOrElse(
-                channel -> webSocketSessionManager.sendMessage(senderSession, new JoinResponse(channel.channelId(), channel.title())),
-                () -> webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.JOIN_REQUEST, join.getSecond().getMessage()))
+                channel -> clientNotificationService.sendMessage(senderSession, senderUserId, new JoinResponse(channel.channelId(), channel.title())),
+                () -> clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.JOIN_REQUEST, join.getSecond().getMessage()))
         );
     }
 }
