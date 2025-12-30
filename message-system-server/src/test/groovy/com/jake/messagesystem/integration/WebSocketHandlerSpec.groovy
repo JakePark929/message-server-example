@@ -3,6 +3,7 @@ package com.jake.messagesystem.integration
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jake.messagesystem.MessageSystemApplication
 import com.jake.messagesystem.dto.ChannelId
+import com.jake.messagesystem.dto.UserId
 import com.jake.messagesystem.dto.websocket.inbound.WriteMessage
 import com.jake.messagesystem.service.ChannelService
 import com.jake.messagesystem.service.UserService
@@ -51,7 +52,12 @@ class WebSocketHandlerSpec extends Specification {
         def sessionIdC = login("testuserC", "testpassC")
         def (clientA, clientB, clientC) = [createClient(sessionIdA), createClient(sessionIdB), createClient(sessionIdC)]
 
-        channelService.getOnlineParticipantIds(_ as ChannelId) >> List.of(
+        channelService.getParticipantIds(_ as ChannelId) >> List.of(
+                userService.getUserId("testuserA").get(),
+                userService.getUserId("testuserB").get(),
+                userService.getUserId("testuserC").get()
+        )
+        channelService.getOnlineParticipantIds(_ as ChannelId, _ as List<UserId>) >> List.of(
                 userService.getUserId("testuserA").get(),
                 userService.getUserId("testuserB").get(),
                 userService.getUserId("testuserC").get()
@@ -88,7 +94,7 @@ class WebSocketHandlerSpec extends Specification {
     def register(String username, String password) {
         def url = "http://localhost:${port}/api/v1/auth/register"
         def headers = new HttpHeaders(["Content-Type": "application/json"])
-        def jsonBody = objectMapper.writeValueAsString([username : username, password: password])
+        def jsonBody = objectMapper.writeValueAsString([username: username, password: password])
         def httpEntity = new HttpEntity(jsonBody, headers)
 
         try {
@@ -111,7 +117,7 @@ class WebSocketHandlerSpec extends Specification {
     def login(String username, String password) {
         def url = "http://localhost:${port}/api/v1/auth/login"
         def headers = new HttpHeaders(["Content-Type": "application/json"])
-        def jsonBody = objectMapper.writeValueAsString([username : username, password: password])
+        def jsonBody = objectMapper.writeValueAsString([username: username, password: password])
         def httpEntity = new HttpEntity(jsonBody, headers)
         def responseEntity = new RestTemplate().exchange(url, HttpMethod.POST, httpEntity, String)
         def sessionId = responseEntity.body

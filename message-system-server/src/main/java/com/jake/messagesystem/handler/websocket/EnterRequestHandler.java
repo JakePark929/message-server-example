@@ -8,7 +8,7 @@ import com.jake.messagesystem.dto.websocket.inbound.EnterRequest;
 import com.jake.messagesystem.dto.websocket.outbound.EnterResponse;
 import com.jake.messagesystem.dto.websocket.outbound.ErrorResponse;
 import com.jake.messagesystem.service.ChannelService;
-import com.jake.messagesystem.session.WebSocketSessionManager;
+import com.jake.messagesystem.service.ClientNotificationService;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
@@ -18,11 +18,11 @@ import java.util.Optional;
 @Component
 public class EnterRequestHandler implements BaseRequestHandler<EnterRequest> {
     private final ChannelService channelService;
-    private final WebSocketSessionManager webSocketSessionManager;
+    private final ClientNotificationService clientNotificationService;
 
-    public EnterRequestHandler(ChannelService channelService, WebSocketSessionManager webSocketSessionManager) {
+    public EnterRequestHandler(ChannelService channelService, ClientNotificationService clientNotificationService) {
         this.channelService = channelService;
-        this.webSocketSessionManager = webSocketSessionManager;
+        this.clientNotificationService = clientNotificationService;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class EnterRequestHandler implements BaseRequestHandler<EnterRequest> {
 
         final Pair<Optional<String>, ResultType> enter = channelService.enter(request.getChannelId(), senderUserId);
         enter.getFirst().ifPresentOrElse(
-                title -> webSocketSessionManager.sendMessage(senderSession, new EnterResponse(request.getChannelId(), title)),
-                () -> webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.ENTER_REQUEST, enter.getSecond().getMessage())));
+                title -> clientNotificationService.sendMessage(senderSession, senderUserId, new EnterResponse(request.getChannelId(), title)),
+                () -> clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.ENTER_REQUEST, enter.getSecond().getMessage())));
     }
 }

@@ -7,18 +7,18 @@ import com.jake.messagesystem.dto.websocket.inbound.FetchChannelInviteCodeReques
 import com.jake.messagesystem.dto.websocket.outbound.ErrorResponse;
 import com.jake.messagesystem.dto.websocket.outbound.FetchChannelInviteCodeResponse;
 import com.jake.messagesystem.service.ChannelService;
-import com.jake.messagesystem.session.WebSocketSessionManager;
+import com.jake.messagesystem.service.ClientNotificationService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
 @Component
 public class FetchChannelInviteCodeRequestHandler implements BaseRequestHandler<FetchChannelInviteCodeRequest> {
     private final ChannelService channelService;
-    private final WebSocketSessionManager webSocketSessionManager;
+    private final ClientNotificationService clientNotificationService;
 
-    public FetchChannelInviteCodeRequestHandler(ChannelService channelService, WebSocketSessionManager webSocketSessionManager) {
+    public FetchChannelInviteCodeRequestHandler(ChannelService channelService, ClientNotificationService clientNotificationService) {
         this.channelService = channelService;
-        this.webSocketSessionManager = webSocketSessionManager;
+        this.clientNotificationService = clientNotificationService;
     }
 
     @Override
@@ -26,14 +26,14 @@ public class FetchChannelInviteCodeRequestHandler implements BaseRequestHandler<
         final UserId senderUserId = (UserId) senderSession.getAttributes().get(IdKey.USER_ID.getValue());
 
         if (!channelService.isJoined(request.getChannelId(), senderUserId)) {
-            webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.FETCH_USER_INVITE_CODE_REQUEST, "Not joined the channel."));
+            clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.FETCH_USER_INVITE_CODE_REQUEST, "Not joined the channel."));
 
             return;
         }
 
         channelService.getInviteCode(request.getChannelId()).ifPresentOrElse(
-                inviteCode -> webSocketSessionManager.sendMessage(senderSession, new FetchChannelInviteCodeResponse(request.getChannelId(), inviteCode)),
-                () -> webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.FETCH_CHANNEL_INVITE_CODE_REQUEST, "Fetch channel invite code failed."))
+                inviteCode -> clientNotificationService.sendMessage(senderSession, senderUserId, new FetchChannelInviteCodeResponse(request.getChannelId(), inviteCode)),
+                () -> clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.FETCH_CHANNEL_INVITE_CODE_REQUEST, "Fetch channel invite code failed."))
         );
     }
 }

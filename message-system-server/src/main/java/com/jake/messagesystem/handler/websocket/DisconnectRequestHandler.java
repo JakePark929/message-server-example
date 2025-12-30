@@ -7,8 +7,8 @@ import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.DisconnectRequest;
 import com.jake.messagesystem.dto.websocket.outbound.DisconnectResponse;
 import com.jake.messagesystem.dto.websocket.outbound.ErrorResponse;
+import com.jake.messagesystem.service.ClientNotificationService;
 import com.jake.messagesystem.service.UserConnectionService;
-import com.jake.messagesystem.session.WebSocketSessionManager;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
@@ -16,11 +16,11 @@ import org.springframework.web.socket.WebSocketSession;
 @Component
 public class DisconnectRequestHandler implements BaseRequestHandler<DisconnectRequest> {
     private final UserConnectionService userConnectionService;
-    private final WebSocketSessionManager webSocketSessionManager;
+    private final ClientNotificationService clientNotificationService;
 
-    public DisconnectRequestHandler(UserConnectionService userConnectionService, WebSocketSessionManager webSocketSessionManager) {
+    public DisconnectRequestHandler(UserConnectionService userConnectionService, ClientNotificationService clientNotificationService) {
         this.userConnectionService = userConnectionService;
-        this.webSocketSessionManager = webSocketSessionManager;
+        this.clientNotificationService = clientNotificationService;
     }
 
     @Override
@@ -29,10 +29,10 @@ public class DisconnectRequestHandler implements BaseRequestHandler<DisconnectRe
         final Pair<Boolean, String> disconnect = userConnectionService.disconnect(senderUserId, request.getUsername());
 
         if (disconnect.getFirst()) {
-            webSocketSessionManager.sendMessage(senderSession, new DisconnectResponse(request.getUsername(), UserConnectionStatus.DISCONNECTED));
+            clientNotificationService.sendMessage(senderSession, senderUserId, new DisconnectResponse(request.getUsername(), UserConnectionStatus.DISCONNECTED));
         } else {
             String errorMessage = disconnect.getSecond();
-            webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.DISCONNECT_REQUEST, errorMessage));
+            clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.DISCONNECT_REQUEST, errorMessage));
         }
     }
 }

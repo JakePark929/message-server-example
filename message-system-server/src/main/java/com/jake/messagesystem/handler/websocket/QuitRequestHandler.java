@@ -8,18 +8,18 @@ import com.jake.messagesystem.dto.websocket.inbound.QuitRequest;
 import com.jake.messagesystem.dto.websocket.outbound.ErrorResponse;
 import com.jake.messagesystem.dto.websocket.outbound.QuitResponse;
 import com.jake.messagesystem.service.ChannelService;
-import com.jake.messagesystem.session.WebSocketSessionManager;
+import com.jake.messagesystem.service.ClientNotificationService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
 @Component
 public class QuitRequestHandler implements BaseRequestHandler<QuitRequest> {
     private final ChannelService channelService;
-    private final WebSocketSessionManager webSocketSessionManager;
+    private final ClientNotificationService clientNotificationService;
 
-    public QuitRequestHandler(ChannelService channelService, WebSocketSessionManager webSocketSessionManager) {
+    public QuitRequestHandler(ChannelService channelService, ClientNotificationService clientNotificationService) {
         this.channelService = channelService;
-        this.webSocketSessionManager = webSocketSessionManager;
+        this.clientNotificationService = clientNotificationService;
     }
 
     @Override
@@ -30,15 +30,15 @@ public class QuitRequestHandler implements BaseRequestHandler<QuitRequest> {
         try {
             quit = channelService.quit(request.getChannelId(), senderUserId);
         } catch (Exception e) {
-            webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.QUIT_REQUEST, ResultType.FAILED.getMessage()));
+            clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.QUIT_REQUEST, ResultType.FAILED.getMessage()));
 
             return;
         }
 
         if (quit == ResultType.SUCCESS) {
-            webSocketSessionManager.sendMessage(senderSession, new QuitResponse(request.getChannelId()));
+            clientNotificationService.sendMessage(senderSession, senderUserId, new QuitResponse(request.getChannelId()));
         } else {
-            webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.QUIT_REQUEST, quit.getMessage()));
+            clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.QUIT_REQUEST, quit.getMessage()));
         }
     }
 }

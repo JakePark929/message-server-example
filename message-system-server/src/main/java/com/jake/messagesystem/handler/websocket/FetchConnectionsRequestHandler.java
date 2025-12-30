@@ -5,8 +5,8 @@ import com.jake.messagesystem.dto.Connection;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.FetchConnectionsRequest;
 import com.jake.messagesystem.dto.websocket.outbound.FetchConnectionsResponse;
+import com.jake.messagesystem.service.ClientNotificationService;
 import com.jake.messagesystem.service.UserConnectionService;
-import com.jake.messagesystem.session.WebSocketSessionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -15,11 +15,11 @@ import java.util.List;
 @Component
 public class FetchConnectionsRequestHandler implements BaseRequestHandler<FetchConnectionsRequest> {
     private final UserConnectionService userConnectionService;
-    private final WebSocketSessionManager webSocketSessionManager;
+    private final ClientNotificationService clientNotificationService;
 
-    public FetchConnectionsRequestHandler(UserConnectionService userConnectionService, WebSocketSessionManager webSocketSessionManager) {
+    public FetchConnectionsRequestHandler(UserConnectionService userConnectionService, ClientNotificationService clientNotificationService) {
         this.userConnectionService = userConnectionService;
-        this.webSocketSessionManager = webSocketSessionManager;
+        this.clientNotificationService = clientNotificationService;
     }
 
     @Override
@@ -27,6 +27,6 @@ public class FetchConnectionsRequestHandler implements BaseRequestHandler<FetchC
         final UserId senderUserId = (UserId) senderSession.getAttributes().get(IdKey.USER_ID.getValue());
 
         final List<Connection> connections = userConnectionService.getUsersByStatus(senderUserId, request.getStatus()).stream().map(user -> new Connection(user.username(), request.getStatus())).toList();
-        webSocketSessionManager.sendMessage(senderSession, new FetchConnectionsResponse(connections));
+        clientNotificationService.sendMessage(senderSession, senderUserId, new FetchConnectionsResponse(connections));
     }
 }

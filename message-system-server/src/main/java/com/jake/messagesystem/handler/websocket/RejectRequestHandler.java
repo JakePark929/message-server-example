@@ -7,8 +7,8 @@ import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.RejectRequest;
 import com.jake.messagesystem.dto.websocket.outbound.ErrorResponse;
 import com.jake.messagesystem.dto.websocket.outbound.RejectResponse;
+import com.jake.messagesystem.service.ClientNotificationService;
 import com.jake.messagesystem.service.UserConnectionService;
-import com.jake.messagesystem.session.WebSocketSessionManager;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
@@ -16,11 +16,11 @@ import org.springframework.web.socket.WebSocketSession;
 @Component
 public class RejectRequestHandler implements BaseRequestHandler<RejectRequest> {
     private final UserConnectionService userConnectionService;
-    private final WebSocketSessionManager webSocketSessionManager;
+    private final ClientNotificationService clientNotificationService;
 
-    public RejectRequestHandler(UserConnectionService userConnectionService, WebSocketSessionManager webSocketSessionManager) {
+    public RejectRequestHandler(UserConnectionService userConnectionService, ClientNotificationService clientNotificationService) {
         this.userConnectionService = userConnectionService;
-        this.webSocketSessionManager = webSocketSessionManager;
+        this.clientNotificationService = clientNotificationService;
     }
 
     @Override
@@ -31,10 +31,10 @@ public class RejectRequestHandler implements BaseRequestHandler<RejectRequest> {
         Pair<Boolean, String> reject = userConnectionService.reject(senderUserId, request.getUsername());
 
         if (reject.getFirst()) {
-            webSocketSessionManager.sendMessage(senderSession, new RejectResponse(request.getUsername(), UserConnectionStatus.REJECTED));
+            clientNotificationService.sendMessage(senderSession, senderUserId, new RejectResponse(request.getUsername(), UserConnectionStatus.REJECTED));
         } else {
             String errorMessage = reject.getSecond();
-            webSocketSessionManager.sendMessage(senderSession, new ErrorResponse(MessageType.REJECT_REQUEST, errorMessage));
+            clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.REJECT_REQUEST, errorMessage));
         }
     }
 }
