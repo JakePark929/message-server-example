@@ -4,6 +4,6 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = "message-system-add-channel"
+rootProject.name = "message-system-add-replication"
 
 include("message-system-server", "message-system-client")
