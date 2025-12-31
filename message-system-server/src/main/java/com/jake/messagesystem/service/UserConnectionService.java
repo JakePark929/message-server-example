@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +34,14 @@ public class UserConnectionService {
     }
 
     @Transactional(readOnly = true)
+    public long countConnectionStatus(UserId senderUserId, List<UserId> partnerIds, UserConnectionStatus status) {
+        final List<Long> ids = partnerIds.stream().map(UserId::id).toList();
+
+        return userConnectionRepository.countByPartnerAUserIdAndPartnerBUserIdInAndStatus(senderUserId.id(), ids, status) +
+                userConnectionRepository.countByPartnerBUserIdAndPartnerAUserIdInAndStatus(senderUserId.id(), ids, status);
+    }
+
+    @Transactional(readOnly = true)
     public List<User> getUsersByStatus(UserId userId, UserConnectionStatus status) {
         final List<UserIdUsernameInviterUserIdProjection> usersA = userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id(), status);
         final List<UserIdUsernameInviterUserIdProjection> usersB = userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id(), status);
@@ -48,18 +58,35 @@ public class UserConnectionService {
         }
     }
 
-    public UserConnectionStatus getStatus(UserId inviterUserId, UserId partnerUserId) {
+    @Transactional(readOnly = true)
+    protected Optional<UserId> getInviterUserId(UserId partnerAUserId, UserId partnerBUserId) {
+        return userConnectionRepository.findInviterUserIdByPartnerAUserIdAndPartnerBUserId(
+                Long.min(partnerAUserId.id(), partnerBUserId.id()),
+                Long.max(partnerAUserId.id(), partnerBUserId.id())
+        ).map(inviterUSerId -> new UserId(inviterUSerId.getInviterUserId()));
+    }
+
+    @Transactional(readOnly = true)
+    protected UserConnectionStatus getStatus(UserId inviterUserId, UserId partnerUserId) {
         return userConnectionRepository.findUserConnectionStatusByPartnerAUserIdAndPartnerBUserId(Long.min(inviterUserId.id(), partnerUserId.id()), Long.max(inviterUserId.id(), partnerUserId.id()))
                 .map(status -> UserConnectionStatus.valueOf(status.getStatus()))
                 .orElse(UserConnectionStatus.NONE);
     }
 
-    @Transactional(readOnly = true)
-    public long countConnectionStatus(UserId senderUserId, List<UserId> partnerIds, UserConnectionStatus status) {
-        final List<Long> ids = partnerIds.stream().map(UserId::id).toList();
+    @Transactional
+    protected void setStatus(UserId inviterUserId, UserId partnerUserId, UserConnectionStatus userConnectionStatus) {
+        if (userConnectionStatus.equals(UserConnectionStatus.ACCEPTED)) {
+            throw new IllegalArgumentException("Can't set to accepted.");
+        }
 
-        return userConnectionRepository.countByPartnerAUserIdAndPartnerBUserIdInAndStatus(senderUserId.id(), ids, status) +
-                userConnectionRepository.countByPartnerBUserIdAndPartnerAUserIdInAndStatus(senderUserId.id(), ids, status);
+        userConnectionRepository.save(
+                new UserConnectionEntity(
+                        Long.min(inviterUserId.id(), partnerUserId.id()),
+                        Long.max(inviterUserId.id(), partnerUserId.id()),
+                        userConnectionStatus,
+                        inviterUserId.id()
+                )
+        );
     }
 
     @Transactional
@@ -99,6 +126,7 @@ public class UserConnectionService {
 
                     yield Pair.of(Optional.of(partnerUserId), inviterUsername.get());
                 } catch (Exception e) {
+                    TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
                     log.error("Set pending failed. cause: {}", e.getMessage());
 
                     yield Pair.of(Optional.empty(), "InviteRequest failed.");
@@ -114,6 +142,7 @@ public class UserConnectionService {
         };
     }
 
+    @Transactional
     public Pair<Optional<UserId>, String> accept(UserId acceptorUserId, String inviterUsername) {
         final Optional<UserId> userId = userService.getUserId(inviterUsername);
         if (userId.isEmpty()) {
@@ -150,14 +179,23 @@ public class UserConnectionService {
 
             return Pair.of(Optional.of(inviterUserId), acceptorUsername.get());
         } catch (IllegalStateException e) {
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            }
+
             return Pair.of(Optional.empty(), e.getMessage());
         } catch (Exception e) {
+            if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            }
+
             log.error("Accept failed. cause: {}", e.getMessage());
 
             return Pair.of(Optional.empty(), "Accept failed.");
         }
     }
 
+    @Transactional
     public Pair<Boolean, String> reject(UserId senderUserId, String inviterUsername) {
         return userService.getUserId(inviterUsername)
                 .filter(inviterUserId -> !inviterUserId.equals(senderUserId))
@@ -169,6 +207,7 @@ public class UserConnectionService {
 
                         return Pair.of(true, inviterUsername);
                     } catch (Exception e) {
+                        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
                         log.error("Set rejected failed. cause: {}", e.getMessage());
 
                         return Pair.of(false, "Reject failed.");
@@ -176,6 +215,7 @@ public class UserConnectionService {
                 }).orElse(Pair.of(false, "Reject failed."));
     }
 
+    @Transactional
     public Pair<Boolean, String> disconnect(UserId senderUserId, String partnerUsername) {
         return userService.getUserId(partnerUsername)
                 .filter(partnerUserId -> !senderUserId.equals(partnerUserId))
@@ -197,33 +237,15 @@ public class UserConnectionService {
                             return Pair.of(true, partnerUsername);
                         }
                     } catch (Exception e) {
+                        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                        }
+
                         log.error("Disconnect failed. cause: {}", e.getMessage());
                     }
 
                     return Pair.of(false, "Disconnect failed.");
                 })
                 .orElse(Pair.of(false, "Disconnect failed."));
-    }
-
-    private Optional<UserId> getInviterUserId(UserId partnerAUserId, UserId partnerBUserId) {
-        return userConnectionRepository.findInviterUserIdByPartnerAUserIdAndPartnerBUserId(
-                Long.min(partnerAUserId.id(), partnerBUserId.id()),
-                Long.max(partnerAUserId.id(), partnerBUserId.id())
-        ).map(inviterUSerId -> new UserId(inviterUSerId.getInviterUserId()));
-    }
-
-    private void setStatus(UserId inviterUserId, UserId partnerUserId, UserConnectionStatus userConnectionStatus) {
-        if (userConnectionStatus.equals(UserConnectionStatus.ACCEPTED)) {
-            throw new IllegalArgumentException("Can't set to accepted.");
-        }
-
-        userConnectionRepository.save(
-                new UserConnectionEntity(
-                        Long.min(inviterUserId.id(), partnerUserId.id()),
-                        Long.max(inviterUserId.id(), partnerUserId.id()),
-                        userConnectionStatus,
-                        inviterUserId.id()
-                )
-        );
     }
 }

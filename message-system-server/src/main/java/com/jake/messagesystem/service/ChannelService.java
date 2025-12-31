@@ -40,6 +40,20 @@ public class ChannelService {
         this.userChannelRepository = userChannelRepository;
     }
 
+    @Transactional(readOnly = true)
+    public Optional<Channel> getChannel(InviteCode inviteCode) {
+        return channelRepository.findChannelByInviteCode(inviteCode.code())
+                .map(projection -> new Channel(new ChannelId(projection.getChannelId()), projection.getTitle(), projection.getHeadCount()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Channel> getChannels(UserId userId) {
+        return userChannelRepository.findChannelsByUserId(userId.id()).stream()
+                .map(projection -> new Channel(new ChannelId(projection.getChannelId()), projection.getTitle(), projection.getHeadCount()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public Optional<InviteCode> getInviteCode(ChannelId channelId) {
         final Optional<InviteCode> inviteCode = channelRepository.findChannelInviteCodeByChannelId(channelId.id())
                 .map(projection -> new InviteCode(projection.getInviteCode()));
@@ -51,10 +65,12 @@ public class ChannelService {
         return inviteCode;
     }
 
+    @Transactional(readOnly = true)
     public boolean isJoined(ChannelId channelId, UserId userId) {
         return userChannelRepository.existsByUserIdAndChannelId(userId.id(), channelId.id());
     }
 
+    @Transactional(readOnly = true)
     public List<UserId> getParticipantIds(ChannelId channelId) {
         return userChannelRepository.findUserIdsByChannelId(channelId.id()).stream()
                 .map(userId -> new UserId(userId.getUserId()))
@@ -63,17 +79,6 @@ public class ChannelService {
 
     public List<UserId> getOnlineParticipantIds(ChannelId channelId, List<UserId> userIds) {
         return sessionService.getOnlineParticipantUserIds(channelId, userIds);
-    }
-
-    public List<Channel> getChannels(UserId userId) {
-        return userChannelRepository.findChannelsByUserId(userId.id()).stream()
-                .map(projection -> new Channel(new ChannelId(projection.getChannelId()), projection.getTitle(), projection.getHeadCount()))
-                .toList();
-    }
-
-    public Optional<Channel> getChannel(InviteCode inviteCode) {
-        return channelRepository.findChannelByInviteCode(inviteCode.code())
-                .map(projection -> new Channel(new ChannelId(projection.getChannelId()), projection.getTitle(), projection.getHeadCount()));
     }
 
     @Transactional
@@ -142,6 +147,7 @@ public class ChannelService {
         return Pair.of(Optional.of(channel), ResultType.SUCCESS);
     }
 
+    @Transactional(readOnly = true)
     public Pair<Optional<String>, ResultType> enter(ChannelId channelId, UserId userId) {
         if (!isJoined(channelId, userId)) {
             log.warn("Enter channel failed. User not joined. channelId: {}, userId: {}", channelId, userId);
