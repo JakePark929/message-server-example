@@ -1,18 +1,30 @@
 spring:
   application:
-    name: message-system-add-channel
+    name: message-system-add-replication
 
   datasource:
-    hikari:
-      jdbc-url: jdbc:mysql://localhost:13306/${MYSQL_DATABASE}
-      username: ${MYSQL_USER}
-      password: ${MYSQL_PASSWORD}
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      pool-name: ConnectionPool
-      minimum-idle: 10
-      maximum-pool-size: 20
-      idle-timeout: 60000
-      connection-timeout: 30000
+    source:
+      hikari:
+        jdbc-url: jdbc:mysql://localhost:13306/${MYSQL_DATABASE}
+        username: ${MYSQL_USER}
+        password: ${MYSQL_PASSWORD}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        pool-name: SourceConnectionPool
+        minimum-idle: 10
+        maximum-pool-size: 20
+        idle-timeout: 60000
+        connection-timeout: 30000
+    replica:
+      hikari:
+        jdbc-url: jdbc:mysql://localhost:13307/${MYSQL_DATABASE}
+        username: ${MYSQL_USER}
+        password: ${MYSQL_PASSWORD}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        pool-name: ReplicaConnectionPool
+        minimum-idle: 10
+        maximum-pool-size: 20
+        idle-timeout: 60000
+        connection-timeout: 30000
   jpa:
     show-sql: true
     open-in-view: false
