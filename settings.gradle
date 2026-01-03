@@ -4,6 +4,6 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = "message-system-add-replication"
+rootProject.name = "message-system-replication-cache"
 
 include("message-system-server", "message-system-client")
