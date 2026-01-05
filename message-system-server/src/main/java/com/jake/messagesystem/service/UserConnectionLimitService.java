@@ -1,5 +1,6 @@
 package com.jake.messagesystem.service;
 
+import com.jake.messagesystem.constants.KeyPrefix;
 import com.jake.messagesystem.constants.UserConnectionStatus;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.entity.UserConnectionEntity;
@@ -10,16 +11,19 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.function.Function;
 
 @Service
 public class UserConnectionLimitService {
+    private final CacheService cacheService;
     private final UserRepository userRepository;
     private final UserConnectionRepository userConnectionRepository;
 
     private int limitConnections = 1_000;
 
-    public UserConnectionLimitService(UserRepository userRepository, UserConnectionRepository userConnectionRepository) {
+    public UserConnectionLimitService(CacheService cacheService, UserRepository userRepository, UserConnectionRepository userConnectionRepository) {
+        this.cacheService = cacheService;
         this.userRepository = userRepository;
         this.userConnectionRepository = userConnectionRepository;
     }
@@ -61,6 +65,11 @@ public class UserConnectionLimitService {
         firstUserEntity.setConnectionCount(firstConnectionCount + 1);
         secondUserEntity.setConnectionCount(secondConnectionCount + 1);
         userConnectionEntity.setStatus(UserConnectionStatus.ACCEPTED);
+        cacheService.delete(List.of(
+                cacheService.buildKey(KeyPrefix.CONNECTION_STATUS, String.valueOf(firstUserId), String.valueOf(secondUserId)),
+                cacheService.buildKey(KeyPrefix.CONNECTIONS_STATUS, acceptorUserId.id().toString(), UserConnectionStatus.ACCEPTED.name()),
+                cacheService.buildKey(KeyPrefix.CONNECTIONS_STATUS, inviterUserid.id().toString(), UserConnectionStatus.ACCEPTED.name())
+        ));
     }
 
     @Transactional
@@ -89,5 +98,10 @@ public class UserConnectionLimitService {
         firstUserEntity.setConnectionCount(firstConnectionCount - 1);
         secondUserEntity.setConnectionCount(secondConnectionCount - 1);
         userConnectionEntity.setStatus(UserConnectionStatus.DISCONNECTED);
+        cacheService.delete(List.of(
+                cacheService.buildKey(KeyPrefix.CONNECTION_STATUS, String.valueOf(firstUserId), String.valueOf(secondUserId)),
+                cacheService.buildKey(KeyPrefix.CONNECTIONS_STATUS, senderUserId.id().toString(), UserConnectionStatus.DISCONNECTED.name()),
+                cacheService.buildKey(KeyPrefix.CONNECTIONS_STATUS, partnerUserid.id().toString(), UserConnectionStatus.DISCONNECTED.name())
+        ));
     }
 }
