@@ -1,5 +1,6 @@
 package com.jake.messagesystem.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.jake.messagesystem.constants.UserConnectionStatus
 import com.jake.messagesystem.dto.InviteCode
 import com.jake.messagesystem.dto.User
@@ -10,10 +11,12 @@ import com.jake.messagesystem.entity.UserConnectionEntity
 import com.jake.messagesystem.entity.UserEntity
 import com.jake.messagesystem.repository.UserConnectionRepository
 import com.jake.messagesystem.repository.UserRepository
+import com.jake.messagesystem.util.JsonUtil
 import org.springframework.data.util.Pair
 import spock.lang.Specification
 
 class UserConnectionServiceSpec extends Specification {
+    CacheService cacheService
     UserConnectionService userConnectionService
     UserConnectionLimitService userConnectionLimitService
     UserService userService = Stub()
@@ -21,8 +24,8 @@ class UserConnectionServiceSpec extends Specification {
     UserConnectionRepository userConnectionRepository = Stub()
 
     def setup() {
-        userConnectionLimitService = new UserConnectionLimitService(userRepository, userConnectionRepository)
-        userConnectionService = new UserConnectionService(userService, userConnectionRepository, userConnectionLimitService)
+        userConnectionLimitService = new UserConnectionLimitService(cacheService, userRepository, userConnectionRepository)
+        userConnectionService = new UserConnectionService(cacheService, userService, userConnectionRepository, userConnectionLimitService, new JsonUtil(new ObjectMapper()))
     }
 
     def "사용자 연결 신청에 대한 테스트."() {

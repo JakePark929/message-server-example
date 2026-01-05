@@ -1,11 +1,13 @@
 package com.jake.messagesystem.integration
 
 import com.jake.messagesystem.MessageSystemApplication
+import com.jake.messagesystem.constants.KeyPrefix
 import com.jake.messagesystem.constants.UserConnectionStatus
 import com.jake.messagesystem.dto.UserId
 import com.jake.messagesystem.entity.UserConnectionId
 import com.jake.messagesystem.repository.UserConnectionRepository
 import com.jake.messagesystem.repository.UserRepository
+import com.jake.messagesystem.service.CacheService
 import com.jake.messagesystem.service.UserConnectionLimitService
 import com.jake.messagesystem.service.UserConnectionService
 import com.jake.messagesystem.service.UserService
@@ -17,6 +19,9 @@ import spock.lang.Specification
 @ActiveProfiles("default")
 @SpringBootTest(classes = MessageSystemApplication)
 class UserConnectionServiceSpec extends Specification {
+    @Autowired
+    CacheService cacheService
+
     @Autowired
     UserService userService
 
@@ -35,7 +40,7 @@ class UserConnectionServiceSpec extends Specification {
     def "연결 요청 수락은 연결 제한 수를 넘을 수 없다."() {
         given:
         userConnectionLimitService.setLimitConnections(10)
-        (0..19).each {userService.addUser("testuser${it}", "testpass${it}") }
+        (0..19).each { userService.addUser("testuser${it}", "testpass${it}") }
         def userIdA = userService.getUserId("testuser0").get()
         def inviteCodeA = userService.getInviteCode(userIdA).get()
 
@@ -68,7 +73,7 @@ class UserConnectionServiceSpec extends Specification {
 
     def "연결 요청 카운트는 0보다 작을 수 없다."() {
         given:
-        (0..10).each {userService.addUser("testuser${it}", "testpass${it}") }
+        (0..10).each { userService.addUser("testuser${it}", "testpass${it}") }
         def userIdA = userService.getUserId("testuser0").get()
         def inviteCodeA = userService.getInviteCode(userIdA).get()
 
@@ -98,47 +103,48 @@ class UserConnectionServiceSpec extends Specification {
     def cleanup() {
         (0..19).each {
             userService.getUserId("testuser${it}").ifPresent { userId ->
+                def userInviteCode = cacheService.get(cacheService.buildKey(KeyPrefix.USER_INVITE_CODE, userId.id().toString())).orElse("")
+                cacheService.delete(List.of(
+                        cacheService.buildKey(KeyPrefix.USER_ID, "testuser${it}"),
+                        cacheService.buildKey(KeyPrefix.USERNAME, userId.id().toString()),
+                        cacheService.buildKey(KeyPrefix.USER, userInviteCode),
+                        cacheService.buildKey(KeyPrefix.USER_INVITE_CODE, userId.id().toString())
+                ))
+
                 userRepository.deleteById(userId.id())
 
                 userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id(), UserConnectionStatus.PENDING).each {
-                    userConnectionRepository.deleteById(new UserConnectionId(
-                            Long.min(userId.id(), it.getUserId()),
-                            Long.max(userId.id(), it.getUserId())
-                    ))
+                    clearConnection(userId.id(), it.getUserId())
                 }
                 userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id(), UserConnectionStatus.PENDING).each {
-                    userConnectionRepository.deleteById(new UserConnectionId(
-                            Long.min(userId.id(), it.getUserId()),
-                            Long.max(userId.id(), it.getUserId())
-                    ))
+                    clearConnection(userId.id(), it.getUserId())
                 }
 
                 userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id(), UserConnectionStatus.ACCEPTED).each {
-                    userConnectionRepository.deleteById(new UserConnectionId(
-                            Long.min(userId.id(), it.getUserId()),
-                            Long.max(userId.id(), it.getUserId())
-                    ))
+                    clearConnection(userId.id(), it.getUserId())
                 }
                 userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id(), UserConnectionStatus.ACCEPTED).each {
-                    userConnectionRepository.deleteById(new UserConnectionId(
-                            Long.min(userId.id(), it.getUserId()),
-                            Long.max(userId.id(), it.getUserId())
-                    ))
+                    clearConnection(userId.id(), it.getUserId())
                 }
 
                 userConnectionRepository.findByPartnerAUserIdAndStatus(userId.id(), UserConnectionStatus.DISCONNECTED).each {
-                    userConnectionRepository.deleteById(new UserConnectionId(
-                            Long.min(userId.id(), it.getUserId()),
-                            Long.max(userId.id(), it.getUserId())
-                    ))
+                    clearConnection(userId.id(), it.getUserId())
                 }
                 userConnectionRepository.findByPartnerBUserIdAndStatus(userId.id(), UserConnectionStatus.DISCONNECTED).each {
-                    userConnectionRepository.deleteById(new UserConnectionId(
-                            Long.min(userId.id(), it.getUserId()),
-                            Long.max(userId.id(), it.getUserId())
-                    ))
+                    clearConnection(userId.id(), it.getUserId())
                 }
             }
         }
+    }
+
+    def clearConnection(Long partnerA, Long partnerB) {
+        def fist = Long.min(partnerA, partnerB)
+        def second = Long.max(partnerA, partnerB)
+
+        userConnectionRepository.deleteById(new UserConnectionId(fist, second))
+        cacheService.delete(List.of(
+                cacheService.buildKey(KeyPrefix.CONNECTION_STATUS, String.valueOf(fist), String.valueOf(second)),
+                cacheService.buildKey(KeyPrefix.INVITER_USER_ID, String.valueOf(fist), String.valueOf(second))
+        ))
     }
 }
