@@ -1,17 +1,33 @@
 plugins {
+    id 'java'
+    id 'groovy'
     id 'org.springframework.boot' version '3.4.11-SNAPSHOT'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'java'
 }
+
+group = 'com.jake'
+version = '0.0.1-SNAPSHOT'
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.session:spring-session-data-redis'
+
     runtimeOnly 'mysql:mysql-connector-java:8.0.33'
 
+    // --- test ---
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    testImplementation 'org.spockframework:spock-core:2.4-M5-groovy-4.0'
+    testImplementation 'org.spockframework:spock-spring:2.4-M5-groovy-4.0'
+
+    testImplementation 'com.h2database:h2'
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }

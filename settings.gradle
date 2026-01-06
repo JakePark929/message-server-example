@@ -1,9 +1,15 @@
 pluginManagement {
     repositories {
-        maven { url = 'https://repo.spring.io/snapshot' }
+        mavenCentral()
         gradlePluginPortal()
+        maven { url = "https://repo.spring.io/snapshot" }
     }
 }
-rootProject.name = "message-system-replication-cache"
 
-include("message-system-server", "message-system-client")
+rootProject.name = "message-system-push"
+
+include(
+        "message-system-client",
+        "message-system-push-server",
+        "message-system-server"
+)
