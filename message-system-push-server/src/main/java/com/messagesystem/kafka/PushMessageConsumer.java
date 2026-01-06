@@ -1,5 +1,8 @@
 package com.messagesystem.kafka;
 
+import com.messagesystem.dto.kafka.inbound.RecordInterface;
+import com.messagesystem.handler.kafka.RecordDispatcher;
+import com.messagesystem.util.JsonUtil;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,21 +14,36 @@ import org.springframework.stereotype.Component;
 public class PushMessageConsumer {
     private static final Logger log = LoggerFactory.getLogger(PushMessageConsumer.class);
 
+    private final RecordDispatcher recordDispatcher;
+
+    private final JsonUtil jsonUtil;
+
+    public PushMessageConsumer(RecordDispatcher recordDispatcher, JsonUtil jsonUtil) {
+        this.recordDispatcher = recordDispatcher;
+        this.jsonUtil = jsonUtil;
+    }
+
     @KafkaListener(
             topics = "${message-system.kafka.listeners.push.topic}",
             groupId = "${message-system.kafka.listeners.push.group-id}",
             concurrency = "${message-system.kafka.listeners.push.concurrency}"
     )
     public void consumeMessage(ConsumerRecord<String, String> consumerRecord, Acknowledgment acknowledgment) {
-        log.info(
-                "Received record: {}, from topic: {}, on key: {}, partition: {}, offset: {}",
-                consumerRecord.value(),
-                consumerRecord.topic(),
-                consumerRecord.key(),
-                consumerRecord.partition(),
-                consumerRecord.offset()
-        );
+        try {
+            log.info(
+                    "Received record: {}, from topic: {}, on key: {}, partition: {}, offset: {}",
+                    consumerRecord.value(),
+                    consumerRecord.topic(),
+                    consumerRecord.key(),
+                    consumerRecord.partition(),
+                    consumerRecord.offset()
+            );
 
-        acknowledgment.acknowledge();
+            jsonUtil.fromJson(consumerRecord.value(), RecordInterface.class).ifPresent(recordDispatcher::dispatchRecord);
+        } catch (Exception e) {
+            log.error("Record handling failed cause: {}", e.getMessage());
+        } finally {
+            acknowledgment.acknowledge();
+        }
     }
 }
