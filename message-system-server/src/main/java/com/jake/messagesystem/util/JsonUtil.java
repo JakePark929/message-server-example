@@ -1,6 +1,7 @@
 package com.jake.messagesystem.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -45,6 +46,17 @@ public class JsonUtil {
         } catch (Exception e) {
             logger.error("Failed Object to Json: {}", e.getMessage());
 
+            return Optional.empty();
+        }
+    }
+
+    public Optional<String> addValue(String json, String key, String value) {
+        try {
+            ObjectNode node = (ObjectNode) objectMapper.readTree(json);
+            node.put(key, value);
+
+            return Optional.of(objectMapper.writeValueAsString(node));
+        } catch (Exception e) {
             return Optional.empty();
         }
     }
