@@ -15,7 +15,8 @@ import java.io.IOError;
 
 public class MessageClient {
     public static void main(String[] args) {
-        final String BASE_URL = "localhost:8080";
+        final String REST_BASE_URL = "localhost:8080";
+        final String WEBSOCKET_BASE_URL = "localhost:8090";
         final String WEBSOCKET_ENDPOINT = "/ws/v1/message";
 
         TerminalService terminalService;
@@ -29,9 +30,9 @@ public class MessageClient {
 
         UserService userService = new UserService();
         JsonUtil.setTerminalService(terminalService);
-        RestApiService restApiService = new RestApiService(terminalService, BASE_URL);
+        RestApiService restApiService = new RestApiService(terminalService, REST_BASE_URL);
         WebSocketSender webSocketSender = new WebSocketSender(terminalService);
-        WebSocketService webSocketService = new WebSocketService(userService, terminalService, webSocketSender, BASE_URL, WEBSOCKET_ENDPOINT);
+        WebSocketService webSocketService = new WebSocketService(userService, terminalService, webSocketSender, WEBSOCKET_BASE_URL, WEBSOCKET_ENDPOINT);
         InboundMessageHandler inboundMessageHandler = new InboundMessageHandler(terminalService, userService);
         webSocketService.setWebSocketMessageHandler(new WebSocketMessageHandler(inboundMessageHandler));
         CommandHandler commandHandler = new CommandHandler(restApiService, webSocketService, terminalService, userService);

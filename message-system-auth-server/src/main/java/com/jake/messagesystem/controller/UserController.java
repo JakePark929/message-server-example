@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-public class MessageUserController {
-    private static final Logger log = LoggerFactory.getLogger(MessageUserController.class);
+public class UserController {
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private final UserService userService;
 
-    public MessageUserController(UserService userService) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
