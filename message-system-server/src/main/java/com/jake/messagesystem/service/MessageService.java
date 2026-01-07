@@ -3,6 +3,7 @@ package com.jake.messagesystem.service;
 import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.dto.ChannelId;
 import com.jake.messagesystem.dto.UserId;
+import com.jake.messagesystem.dto.kafka.outbound.MessageNotificationRecord;
 import com.jake.messagesystem.dto.websocket.outbound.BaseMessage;
 import com.jake.messagesystem.entity.MessageEntity;
 import com.jake.messagesystem.repository.MessageRepository;
@@ -40,7 +41,7 @@ public class MessageService {
         this.webSocketSessionManager = webSocketSessionManager;
         this.messageRepository = messageRepository;
 
-        pushService.registerPushMessageType(MessageType.NOTIFY_MESSAGE);
+        pushService.registerPushMessageType(MessageType.NOTIFY_MESSAGE, MessageNotificationRecord.class);
     }
 
     @Transactional

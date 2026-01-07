@@ -17,9 +17,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.session:spring-session-data-redis'
 
+    implementation 'org.springframework.kafka:spring-kafka'
+
     runtimeOnly 'mysql:mysql-connector-java:8.0.33'
 
-    // --- test ---
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     testImplementation 'org.spockframework:spock-core:2.4-M5-groovy-4.0'
