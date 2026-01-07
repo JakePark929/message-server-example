@@ -5,6 +5,7 @@ import com.jake.messagesystem.constants.KeyPrefix
 import com.jake.messagesystem.constants.UserConnectionStatus
 import com.jake.messagesystem.dto.UserId
 import com.jake.messagesystem.entity.UserConnectionId
+import com.jake.messagesystem.entity.UserEntity
 import com.jake.messagesystem.repository.UserConnectionRepository
 import com.jake.messagesystem.repository.UserRepository
 import com.jake.messagesystem.service.CacheService
@@ -40,7 +41,7 @@ class UserConnectionServiceSpec extends Specification {
     def "연결 요청 수락은 연결 제한 수를 넘을 수 없다."() {
         given:
         userConnectionLimitService.setLimitConnections(10)
-        (0..19).each { userService.addUser("testuser${it}", "testpass${it}") }
+        (0..19).each { addUser("testuser${it}", "testpass${it}") }
         def userIdA = userService.getUserId("testuser0").get()
         def inviteCodeA = userService.getInviteCode(userIdA).get()
 
@@ -73,7 +74,7 @@ class UserConnectionServiceSpec extends Specification {
 
     def "연결 요청 카운트는 0보다 작을 수 없다."() {
         given:
-        (0..10).each { userService.addUser("testuser${it}", "testpass${it}") }
+        (0..10).each { addUser("testuser${it}", "testpass${it}") }
         def userIdA = userService.getUserId("testuser0").get()
         def inviteCodeA = userService.getInviteCode(userIdA).get()
 
@@ -135,6 +136,12 @@ class UserConnectionServiceSpec extends Specification {
                 }
             }
         }
+    }
+
+    def addUser(String username, String password) {
+        final UserEntity userEntity = userRepository.save(new UserEntity(username, password))
+
+        return new UserId(userEntity.getUserId())
     }
 
     def clearConnection(Long partnerA, Long partnerB) {

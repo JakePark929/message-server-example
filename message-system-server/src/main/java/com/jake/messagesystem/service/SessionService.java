@@ -6,8 +6,6 @@ import com.jake.messagesystem.dto.ChannelId;
 import com.jake.messagesystem.dto.UserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.session.Session;
 import org.springframework.session.SessionRepository;
 import org.springframework.stereotype.Service;
@@ -29,12 +27,6 @@ public class SessionService {
     public SessionService(SessionRepository<? extends Session> httpSessionRepository, CacheService cacheService) {
         this.httpSessionRepository = httpSessionRepository;
         this.cacheService = cacheService;
-    }
-
-    public String getUsername() {
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        return authentication.getName();
     }
 
     public List<UserId> getOnlineParticipantUserIds(ChannelId channelId, List<UserId> userIds) {
