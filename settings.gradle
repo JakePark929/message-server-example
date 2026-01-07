@@ -6,7 +6,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "message-system-auth"
+rootProject.name = "message-system-seqid"
 
 include(
         "message-system-client",

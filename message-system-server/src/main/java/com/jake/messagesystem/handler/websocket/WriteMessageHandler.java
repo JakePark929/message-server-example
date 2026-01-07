@@ -5,6 +5,7 @@ import com.jake.messagesystem.dto.ChannelId;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.WriteMessage;
 import com.jake.messagesystem.dto.websocket.outbound.MessageNotification;
+import com.jake.messagesystem.service.MessageSeqIdGenerator;
 import com.jake.messagesystem.service.MessageService;
 import com.jake.messagesystem.service.UserService;
 import org.springframework.stereotype.Component;
@@ -15,9 +16,12 @@ public class WriteMessageHandler implements BaseRequestHandler<WriteMessage> {
     private final UserService userService;
     private final MessageService messageService;
 
-    public WriteMessageHandler(UserService userService, MessageService messageService) {
+    private final MessageSeqIdGenerator messageSeqIdGenerator;
+
+    public WriteMessageHandler(UserService userService, MessageService messageService, MessageSeqIdGenerator messageSeqIdGenerator) {
         this.userService = userService;
         this.messageService = messageService;
+        this.messageSeqIdGenerator = messageSeqIdGenerator;
     }
 
     @Override
@@ -26,7 +30,12 @@ public class WriteMessageHandler implements BaseRequestHandler<WriteMessage> {
         ChannelId channelId = request.getChannelId();
         String content = request.getContent();
         String senderUsername = userService.getUserName(senderUserId).orElse("unknown");
-
-        messageService.sendMessage(senderUserId, content, channelId, new MessageNotification(channelId, senderUsername, content));
+        messageSeqIdGenerator.getNext(channelId).ifPresent(messageSeqId -> messageService.sendMessage(
+                senderUserId,
+                content,
+                channelId,
+                messageSeqId,
+                new MessageNotification(channelId, messageSeqId, senderUsername, content)
+        ));
     }
 }

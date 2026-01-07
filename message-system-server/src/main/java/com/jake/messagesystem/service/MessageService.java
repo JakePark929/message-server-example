@@ -2,6 +2,7 @@ package com.jake.messagesystem.service;
 
 import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.dto.ChannelId;
+import com.jake.messagesystem.dto.MessageSeqId;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.kafka.outbound.MessageNotificationRecord;
 import com.jake.messagesystem.dto.websocket.outbound.BaseMessage;
@@ -45,7 +46,7 @@ public class MessageService {
     }
 
     @Transactional
-    public void sendMessage(UserId senderUserId, String content, ChannelId channelId, BaseMessage message) {
+    public void sendMessage(UserId senderUserId, String content, ChannelId channelId, MessageSeqId messageSeqId, BaseMessage message) {
         final Optional<String> json = jsonUtil.toJson(message);
         if (json.isEmpty()) {
             log.error("Send message failed. messageType: {}", message.getType());
@@ -55,7 +56,7 @@ public class MessageService {
 
         String payload = json.get();
         try {
-            messageRepository.save(new MessageEntity(senderUserId.id(), content));
+            messageRepository.save(new MessageEntity(channelId.id(), messageSeqId.id(), senderUserId.id(), content));
         } catch (Exception e) {
             log.error("Send message failed. cause: {}", e.getMessage());
 
