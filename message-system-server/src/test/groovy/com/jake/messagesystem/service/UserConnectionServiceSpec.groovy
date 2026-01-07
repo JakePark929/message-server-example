@@ -16,10 +16,10 @@ import org.springframework.data.util.Pair
 import spock.lang.Specification
 
 class UserConnectionServiceSpec extends Specification {
-    CacheService cacheService
     UserConnectionService userConnectionService
     UserConnectionLimitService userConnectionLimitService
     UserService userService = Stub()
+    CacheService cacheService = Stub()
     UserRepository userRepository = Stub()
     UserConnectionRepository userConnectionRepository = Stub()
 

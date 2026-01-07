@@ -6,10 +6,11 @@ pluginManagement {
     }
 }
 
-rootProject.name = "message-system-push"
+rootProject.name = "message-system-auth"
 
 include(
         "message-system-client",
+        "message-system-auth-server",
         "message-system-push-server",
         "message-system-server"
 )
