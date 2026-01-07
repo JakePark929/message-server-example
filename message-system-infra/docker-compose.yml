@@ -150,3 +150,11 @@ services:
       - kafka1
       - kafka2
       - kafka3
+
+  nginx:
+    image: nginx:1.27.5
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+    restart: unless-stopped
