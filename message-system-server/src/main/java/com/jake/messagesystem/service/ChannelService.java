@@ -4,13 +4,16 @@ import com.jake.messagesystem.constants.KeyPrefix;
 import com.jake.messagesystem.constants.ResultType;
 import com.jake.messagesystem.constants.UserConnectionStatus;
 import com.jake.messagesystem.dto.Channel;
+import com.jake.messagesystem.dto.ChannelEntry;
 import com.jake.messagesystem.dto.ChannelId;
 import com.jake.messagesystem.dto.InviteCode;
+import com.jake.messagesystem.dto.MessageSeqId;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.projection.ChannelTitleProjection;
 import com.jake.messagesystem.entity.ChannelEntity;
 import com.jake.messagesystem.entity.UserChannelEntity;
 import com.jake.messagesystem.repository.ChannelRepository;
+import com.jake.messagesystem.repository.MessageRepository;
 import com.jake.messagesystem.repository.UserChannelRepository;
 import com.jake.messagesystem.util.JsonUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -37,14 +40,16 @@ public class ChannelService {
 
     private static final int LIMIT_HEAD_COUNT = 100;
     private final JsonUtil jsonUtil;
+    private final MessageRepository messageRepository;
 
-    public ChannelService(CacheService cacheService, SessionService sessionService, UserConnectionService userConnectionService, ChannelRepository channelRepository, UserChannelRepository userChannelRepository, JsonUtil jsonUtil) {
+    public ChannelService(CacheService cacheService, SessionService sessionService, UserConnectionService userConnectionService, ChannelRepository channelRepository, UserChannelRepository userChannelRepository, JsonUtil jsonUtil, MessageRepository messageRepository) {
         this.cacheService = cacheService;
         this.sessionService = sessionService;
         this.userConnectionService = userConnectionService;
         this.channelRepository = channelRepository;
         this.userChannelRepository = userChannelRepository;
         this.jsonUtil = jsonUtil;
+        this.messageRepository = messageRepository;
     }
 
     @Transactional(readOnly = true)
@@ -225,7 +230,7 @@ public class ChannelService {
     }
 
     @Transactional(readOnly = true)
-    public Pair<Optional<String>, ResultType> enter(ChannelId channelId, UserId userId) {
+    public Pair<Optional<ChannelEntry>, ResultType> enter(ChannelId channelId, UserId userId) {
         if (!isJoined(channelId, userId)) {
             log.warn("Enter channel failed. User not joined. channelId: {}, userId: {}", channelId, userId);
 
@@ -242,14 +247,26 @@ public class ChannelService {
             return Pair.of(Optional.empty(), ResultType.NOT_FOUND);
         }
 
-        boolean activated = sessionService.setActiveChannel(userId, channelId);
-        if (!activated) {
-            log.error("Enter channel failed. Session update failed. channelId: {}, userId: {}", channelId, userId);
+        final Optional<MessageSeqId> lastReadMsgSeq = userChannelRepository.findLastReadMsgSeqByUserIdAndChannelId(userId.id(), channelId.id()).map(lastReadMsgSeqProjection -> new MessageSeqId(lastReadMsgSeqProjection.getLastReadMsgSeq()));
 
-            return Pair.of(Optional.empty(), ResultType.FAILED);
+        if (lastReadMsgSeq.isEmpty()) {
+            log.error("Enter channel failed. No record found for userId: {}, channelId: {}", userId.id(), channelId.id());
+
+            return Pair.of(Optional.empty(), ResultType.NOT_FOUND);
         }
 
-        return Pair.of(title, ResultType.SUCCESS);
+        final MessageSeqId lastChannelmessageSeqId = messageRepository.findLastMessageSequenceByChannelId(channelId.id())
+                .map(MessageSeqId::new)
+                .orElse(new MessageSeqId(0L));
+
+        if (sessionService.setActiveChannel(userId, channelId)) {
+
+            return Pair.of(Optional.of(new ChannelEntry(title.get(), lastReadMsgSeq.get(), lastChannelmessageSeqId)), ResultType.SUCCESS);
+        }
+
+        log.error("Enter channel failed. Session update failed. channelId: {}, userId: {}", channelId, userId);
+
+        return Pair.of(Optional.empty(), ResultType.FAILED);
     }
 
     public boolean leave(UserId userId) {

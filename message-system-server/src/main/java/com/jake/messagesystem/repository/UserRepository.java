@@ -3,6 +3,7 @@ package com.jake.messagesystem.repository;
 import com.jake.messagesystem.dto.projection.CountProjection;
 import com.jake.messagesystem.dto.projection.InviteCodeProjection;
 import com.jake.messagesystem.dto.projection.UserIdProjection;
+import com.jake.messagesystem.dto.projection.UserIdUsernameProjection;
 import com.jake.messagesystem.dto.projection.UsernameProjection;
 import com.jake.messagesystem.entity.UserEntity;
 import jakarta.persistence.LockModeType;
@@ -18,10 +19,17 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserIdProjection> findUserIdByUsername(@NonNull String username);
+
     List<UserIdProjection> findByUsernameIn(@NonNull Collection<String> usernames);
+
+    List<UserIdUsernameProjection> findByUserIdIn(@NonNull Collection<Long> userIds);
+
     Optional<UsernameProjection> findByUserId(@NonNull Long userId);
+
     Optional<UserEntity> findByInviteCode(@NonNull String inviteCode);
+
     Optional<InviteCodeProjection> findInviteCodeByUserId(@NonNull Long userId);
+
     Optional<CountProjection> findCountByUserId(@NonNull Long userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
