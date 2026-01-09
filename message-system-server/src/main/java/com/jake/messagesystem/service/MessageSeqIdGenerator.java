@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Component
 public class MessageSeqIdGenerator {
-    private final Logger log = LoggerFactory.getLogger(MessageService.class);
+    private final Logger log = LoggerFactory.getLogger(MessageSeqIdGenerator.class);
 
     private final StringRedisTemplate stringRedisTemplate;
 

@@ -9,6 +9,8 @@ public class MessageType {
     public static final String FETCH_CONNECTIONS_RESPONSE = "FETCH_CONNECTIONS_RESPONSE";
     public static final String FETCH_CHANNELS_REQUEST = "FETCH_CHANNELS_REQUEST";
     public static final String FETCH_CHANNELS_RESPONSE = "FETCH_CHANNELS_RESPONSE";
+    public static final String FETCH_MESSAGES_REQUEST = "FETCH_MESSAGES_REQUEST";
+    public static final String FETCH_MESSAGES_RESPONSE = "FETCH_MESSAGES_RESPONSE";
     public static final String INVITE_REQUEST = "INVITE_REQUEST";
     public static final String INVITE_RESPONSE = "INVITE_RESPONSE";
     public static final String ACCEPT_REQUEST = "ACCEPT_REQUEST";
@@ -27,8 +29,11 @@ public class MessageType {
     public static final String LEAVE_RESPONSE = "LEAVE_RESPONSE";
     public static final String QUIT_REQUEST = "QUIT_REQUEST";
     public static final String QUIT_RESPONSE = "QUIT_RESPONSE";
-
     public static final String WRITE_MESSAGE = "WRITE_MESSAGE";
+
+    // Ack
+    public static final String READ_MESSAGE_ACK = "READ_MESSAGE_ACK";
+    public static final String WRITE_MESSAGE_ACK = "WRITE_MESSAGE_ACK";
 
     // Notification
     public static final String ASK_INVITE = "ASK_INVITE";

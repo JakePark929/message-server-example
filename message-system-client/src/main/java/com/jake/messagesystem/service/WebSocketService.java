@@ -4,7 +4,6 @@ import com.jake.messagesystem.dto.websocket.outbound.BaseRequest;
 import com.jake.messagesystem.dto.websocket.outbound.KeepAlive;
 import com.jake.messagesystem.dto.websocket.outbound.WriteMessage;
 import com.jake.messagesystem.handler.WebSocketMessageHandler;
-import com.jake.messagesystem.handler.WebSocketSender;
 import com.jake.messagesystem.handler.WebSocketSessionHandler;
 import com.jake.messagesystem.util.JsonUtil;
 import jakarta.websocket.ClientEndpointConfig;
@@ -22,16 +21,16 @@ import java.util.concurrent.TimeUnit;
 public class WebSocketService {
     private final UserService userService;
     private final TerminalService terminalService;
-    private final WebSocketSender webSocketSender;
+    private final MessageService messageService;
     private final String webSocketUrl;
     private WebSocketMessageHandler webSocketMessageHandler;
     private Session session;
     private ScheduledExecutorService scheduledExecutorService = null;
 
-    public WebSocketService(UserService userService, TerminalService terminalService, WebSocketSender webSocketSender, String url, String endpoint) {
+    public WebSocketService(UserService userService, TerminalService terminalService, MessageService messageService, String url, String endpoint) {
         this.userService = userService;
         this.terminalService = terminalService;
-        this.webSocketSender = webSocketSender;
+        this.messageService = messageService;
         this.webSocketUrl = "ws://" + url + endpoint;
     }
 
@@ -81,7 +80,7 @@ public class WebSocketService {
     public void sendMessage(BaseRequest baseRequest) {
         if (session != null && session.isOpen()) {
             if (baseRequest instanceof WriteMessage messageRequest) {
-                webSocketSender.sendMessage(session, messageRequest);
+                messageService.sendMessage(session, messageRequest);
 
                 return;
             }
