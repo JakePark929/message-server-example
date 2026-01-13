@@ -6,6 +6,7 @@ import com.jake.messagesystem.dto.websocket.inbound.FetchMessagesResponse;
 import com.jake.messagesystem.dto.websocket.inbound.MessageNotification;
 import com.jake.messagesystem.dto.websocket.inbound.WriteMessageAck;
 import com.jake.messagesystem.dto.websocket.outbound.FetchMessagesRequest;
+import com.jake.messagesystem.dto.websocket.outbound.ReadMessageAck;
 import com.jake.messagesystem.dto.websocket.outbound.WriteMessage;
 import com.jake.messagesystem.util.JsonUtil;
 import jakarta.websocket.Session;
@@ -110,6 +111,8 @@ public class MessageService {
             if (userService.getLastReadMessageSeqId() == null || peekMessage.messageSeqId().id() == userService.getLastReadMessageSeqId().id() + 1) {
                 final Message message = userService.popMessage();
                 terminalService.printMessage(message.username(), message.content());
+                webSocketService.sendMessage(new ReadMessageAck(userService.getChannelId(), message.messageSeqId()));
+                userService.setLastReadMessageSeqId(message.messageSeqId());
             } else if (peekMessage.messageSeqId().id() <= userService.getLastReadMessageSeqId().id()) {
                 userService.popMessage();
             } else if (peekMessage.messageSeqId().id() > userService.getLastReadMessageSeqId().id() + 1) {
