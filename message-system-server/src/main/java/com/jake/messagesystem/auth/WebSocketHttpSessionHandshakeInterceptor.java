@@ -28,7 +28,7 @@ public class WebSocketHttpSessionHandshakeInterceptor extends HttpSessionHandsha
             final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (authentication == null) {
-                log.warn("WebSocket Handshake failed/ authentication is null.");
+                log.warn("WebSocket Handshake failed. authentication is null.");
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);
 
                 return false;

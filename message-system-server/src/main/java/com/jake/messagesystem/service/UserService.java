@@ -122,7 +122,7 @@ public class UserService {
             );
         }
 
-        return Pair.of(resultMap, resultMap.isEmpty() ? ResultType.NOT_FOUND : ResultType.SUCCESS);
+        return Pair.of(resultMap, ResultType.SUCCESS);
     }
 
     @Transactional(readOnly = true)

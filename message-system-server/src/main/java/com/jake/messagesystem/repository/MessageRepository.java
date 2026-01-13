@@ -1,6 +1,7 @@
 package com.jake.messagesystem.repository;
 
 import com.jake.messagesystem.dto.projection.MessageInfoProjection;
+import com.jake.messagesystem.entity.ChannelSequenceId;
 import com.jake.messagesystem.entity.MessageEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
+public interface MessageRepository extends JpaRepository<MessageEntity, ChannelSequenceId> {
     @Query(
             "SELECT MAX(m.messageSequence) " +
                     "FROM MessageEntity m " +
