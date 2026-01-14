@@ -19,10 +19,12 @@ import com.jake.messagesystem.constants.MessageType;
         @JsonSubTypes.Type(value = FetchUserInviteCodeResponse.class, name = MessageType.FETCH_USER_INVITE_CODE_RESPONSE),
         @JsonSubTypes.Type(value = FetchChannelInviteCodeResponse.class, name = MessageType.FETCH_CHANNEL_INVITE_CODE_RESPONSE),
         @JsonSubTypes.Type(value = FetchChannelsResponse.class, name = MessageType.FETCH_CHANNELS_RESPONSE),
+        @JsonSubTypes.Type(value = FetchMessagesResponse.class, name = MessageType.FETCH_MESSAGES_RESPONSE),
         @JsonSubTypes.Type(value = InviteNotification.class, name = MessageType.ASK_INVITE),
         @JsonSubTypes.Type(value = AcceptNotification.class, name = MessageType.NOTIFY_ACCEPT),
         @JsonSubTypes.Type(value = JoinNotification.class, name = MessageType.NOTIFY_JOIN),
         @JsonSubTypes.Type(value = MessageNotification.class, name = MessageType.NOTIFY_MESSAGE),
+        @JsonSubTypes.Type(value = WriteMessageAck.class, name = MessageType.WRITE_MESSAGE_ACK),
         @JsonSubTypes.Type(value = ErrorResponse.class, name = MessageType.ERROR),
 })
 public abstract class BaseMessage {

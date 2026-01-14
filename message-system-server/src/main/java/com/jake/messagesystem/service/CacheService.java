@@ -2,12 +2,17 @@ package com.jake.messagesystem.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -61,6 +66,25 @@ public class CacheService {
             return true;
         } catch (Exception e) {
             log.error("Redis set failed. key: {}, cause: {}", key, e.getMessage());
+        }
+
+        return false;
+    }
+
+    public boolean set(Map<String, String> map, Long ttlSeconds) {
+        try {
+            stringRedisTemplate.executePipelined(new SessionCallback<>() {
+                @Override
+                @SuppressWarnings("unchecked")
+                public <K, V> Object execute(@NonNull RedisOperations<K, V> operations) throws DataAccessException {
+                    map.forEach((key, value) -> operations.opsForValue().set((K) key, (V) value, ttlSeconds));
+                    return null;
+                }
+            });
+
+            return true;
+        } catch (Exception e) {
+            log.error("Redis multi set failed. key: {}, cause: {}", map.keySet(), e.getMessage());
         }
 
         return false;

@@ -1,5 +1,6 @@
 package com.jake.messagesystem.handler;
 
+import com.jake.messagesystem.dto.MessageSeqId;
 import com.jake.messagesystem.dto.websocket.inbound.AcceptNotification;
 import com.jake.messagesystem.dto.websocket.inbound.AcceptResponse;
 import com.jake.messagesystem.dto.websocket.inbound.BaseMessage;
@@ -10,6 +11,7 @@ import com.jake.messagesystem.dto.websocket.inbound.ErrorResponse;
 import com.jake.messagesystem.dto.websocket.inbound.FetchChannelInviteCodeResponse;
 import com.jake.messagesystem.dto.websocket.inbound.FetchChannelsResponse;
 import com.jake.messagesystem.dto.websocket.inbound.FetchConnectionsResponse;
+import com.jake.messagesystem.dto.websocket.inbound.FetchMessagesResponse;
 import com.jake.messagesystem.dto.websocket.inbound.FetchUserInviteCodeResponse;
 import com.jake.messagesystem.dto.websocket.inbound.InviteNotification;
 import com.jake.messagesystem.dto.websocket.inbound.InviteResponse;
@@ -19,16 +21,22 @@ import com.jake.messagesystem.dto.websocket.inbound.LeaveResponse;
 import com.jake.messagesystem.dto.websocket.inbound.MessageNotification;
 import com.jake.messagesystem.dto.websocket.inbound.QuitResponse;
 import com.jake.messagesystem.dto.websocket.inbound.RejectResponse;
+import com.jake.messagesystem.dto.websocket.inbound.WriteMessageAck;
+import com.jake.messagesystem.dto.websocket.outbound.FetchMessagesRequest;
+import com.jake.messagesystem.service.MessageService;
 import com.jake.messagesystem.service.TerminalService;
 import com.jake.messagesystem.service.UserService;
 import com.jake.messagesystem.util.JsonUtil;
 
 public class InboundMessageHandler {
     private final TerminalService terminalService;
+    private static final int LIMIT_MESSAGES_COUNT = 10;
     private final UserService userService;
+    private final MessageService messageService;
 
-    public InboundMessageHandler(TerminalService terminalService, UserService userService) {
+    public InboundMessageHandler(TerminalService terminalService, MessageService messageService, UserService userService) {
         this.terminalService = terminalService;
+        this.messageService = messageService;
         this.userService = userService;
     }
 
@@ -36,7 +44,11 @@ public class InboundMessageHandler {
         JsonUtil.fromJson(payload, BaseMessage.class)
                 .ifPresent(message -> {
                     if (message instanceof MessageNotification messageNotification) {
-                        message(messageNotification);
+                        messageService.receiveMessage(messageNotification);
+                    } else if (message instanceof WriteMessageAck writeMessageAck) {
+                        messageService.receiveMessage(writeMessageAck);
+                    } else if (message instanceof FetchMessagesResponse fetchMessagesResponse) {
+                        messageService.receiveMessage(fetchMessagesResponse);
                     } else if (message instanceof FetchUserInviteCodeResponse fetchUserInviteCodeResponse) {
                         fetchUserInviteCode(fetchUserInviteCodeResponse);
                     } else if (message instanceof FetchChannelInviteCodeResponse fetchChannelInviteCodeResponse) {
@@ -73,10 +85,6 @@ public class InboundMessageHandler {
                         error(errorResponse);
                     }
                 });
-    }
-
-    private void message(MessageNotification messageNotification) {
-        terminalService.printMessage(messageNotification.getUsername(), messageNotification.getContent());
     }
 
     private void fetchUserInviteCode(FetchUserInviteCodeResponse fetchUserInviteCodeResponse) {
@@ -137,6 +145,17 @@ public class InboundMessageHandler {
 
     private void enter(EnterResponse enterResponse) {
         userService.moveToChannel(enterResponse.getChannelId());
+        if (!enterResponse.getLastReadMessageSeqId().equals(enterResponse.getLastChannelMessageSeqId())) {
+            final MessageSeqId startMessageSeqId = new MessageSeqId(
+                    Math.max(
+                            enterResponse.getLastChannelMessageSeqId().id() - LIMIT_MESSAGES_COUNT,
+                            enterResponse.getLastReadMessageSeqId().id() + 1
+                    )
+            );
+
+            messageService.sendMessage(new FetchMessagesRequest(enterResponse.getChannelId(), startMessageSeqId, enterResponse.getLastChannelMessageSeqId()));
+        }
+
         terminalService.printSystemMessage("Enter channel %s: %s".formatted(enterResponse.getChannelId(), enterResponse.getTitle()));
     }
 

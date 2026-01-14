@@ -1,31 +1,37 @@
 package com.jake.messagesystem.service;
 
 import com.jake.messagesystem.constants.KeyPrefix;
+import com.jake.messagesystem.constants.ResultType;
 import com.jake.messagesystem.dto.InviteCode;
 import com.jake.messagesystem.dto.User;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.projection.CountProjection;
+import com.jake.messagesystem.dto.projection.UserIdUsernameProjection;
 import com.jake.messagesystem.dto.projection.UsernameProjection;
 import com.jake.messagesystem.repository.UserRepository;
 import com.jake.messagesystem.util.JsonUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
-    public static final Logger log = LoggerFactory.getLogger(UserService.class);
-
     private final CacheService cacheService;
     private final UserRepository userRepository;
 
     private final JsonUtil jsonUtil;
 
     private final long TTL = 3600;
+    private static final long LIMIT_FIND_COUNT = 100;
 
     public UserService(CacheService cacheService, UserRepository userRepository, JsonUtil jsonUtil) {
         this.cacheService = cacheService;
@@ -64,6 +70,59 @@ public class UserService {
         fromDb.ifPresent(username -> cacheService.set(key, username, TTL));
 
         return fromDb;
+    }
+
+    @Transactional(readOnly = true)
+    public Pair<Map<UserId, String>, ResultType> getUsernames(Set<UserId> userIds) {
+        if (userIds.size() > LIMIT_FIND_COUNT) {
+
+            return Pair.of(Collections.emptyMap(), ResultType.OVER_LIMIT);
+        }
+
+        final List<String> usernames = cacheService.get(
+                userIds.stream()
+                        .map(userId -> cacheService.buildKey(KeyPrefix.USERNAME, userId.id().toString()))
+                        .toList()
+        );
+        Map<UserId, String> resultMap = new HashMap<>();
+        Set<UserId> missingUserIds = new HashSet<>();
+        int index = 0;
+        for (UserId userId : userIds) {
+            String username = usernames.get(index++);
+            if (username != null) {
+                resultMap.put(userId, username);
+            } else {
+                missingUserIds.add(userId);
+            }
+        }
+
+        if (!missingUserIds.isEmpty()) {
+            final Map<UserId, String> userIdsAndUsernames = userRepository.findByUserIdIn(
+                    missingUserIds.stream()
+                            .map(UserId::id)
+                            .collect(Collectors.toUnmodifiableSet())
+            ).stream().collect(
+                    Collectors.toMap(
+                            projection ->
+                                    new UserId(projection.getUserId()), UserIdUsernameProjection::getUsername)
+            );
+
+            resultMap.putAll(userIdsAndUsernames);
+            cacheService.set(
+                    userIdsAndUsernames.entrySet().stream().collect(
+                            Collectors.toMap(
+                                    entry -> cacheService.buildKey(
+                                            KeyPrefix.USERNAME,
+                                            entry.getKey().id().toString()
+                                    ),
+                                    Map.Entry::getValue
+                            )
+                    ),
+                    TTL
+            );
+        }
+
+        return Pair.of(resultMap, ResultType.SUCCESS);
     }
 
     @Transactional(readOnly = true)

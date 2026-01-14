@@ -6,14 +6,20 @@ import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.dto.ChannelId;
 
 public class WriteMessage extends BaseRequest {
+    private final Long serial;
     private final ChannelId channelId;
     private final String content;
 
     @JsonCreator
-    public WriteMessage(@JsonProperty("channelId") ChannelId channelId, @JsonProperty("content") String content) {
+    public WriteMessage(@JsonProperty("serial") Long serial, @JsonProperty("channelId") ChannelId channelId, @JsonProperty("content") String content) {
         super(MessageType.WRITE_MESSAGE);
+        this.serial = serial;
         this.channelId = channelId;
         this.content = content;
+    }
+
+    public Long getSerial() {
+        return serial;
     }
 
     public ChannelId getChannelId() {

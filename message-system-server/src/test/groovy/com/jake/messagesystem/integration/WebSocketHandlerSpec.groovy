@@ -5,6 +5,8 @@ import com.jake.messagesystem.MessageSystemApplication
 import com.jake.messagesystem.dto.ChannelId
 import com.jake.messagesystem.dto.UserId
 import com.jake.messagesystem.dto.websocket.inbound.WriteMessage
+import com.jake.messagesystem.entity.ChannelSequenceId
+import com.jake.messagesystem.repository.MessageRepository
 import com.jake.messagesystem.service.ChannelService
 import com.jake.messagesystem.service.UserService
 import org.spockframework.spring.SpringBean
@@ -39,6 +41,9 @@ class WebSocketHandlerSpec extends Specification {
     @Autowired
     UserService userService
 
+    @Autowired
+    MessageRepository messageRepository
+
     @SpringBean
     ChannelService channelService = Stub()
 
@@ -64,18 +69,18 @@ class WebSocketHandlerSpec extends Specification {
         )
 
         when:
-        clientA.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. A 입니다."))))
-        clientB.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. B 입니다."))))
-        clientC.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(new ChannelId(1), "안녕하세요. C 입니다."))))
+        clientA.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(1, new ChannelId(1), "안녕하세요. A 입니다."))))
+        clientB.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(1, new ChannelId(1), "안녕하세요. B 입니다."))))
+        clientC.session.sendMessage(new TextMessage(objectMapper.writeValueAsString(new WriteMessage(1, new ChannelId(1), "안녕하세요. C 입니다."))))
 
         then:
         // 순서 상관 없이 테스트
-        def resultA = clientA.queue.poll(1, TimeUnit.SECONDS) + clientA.queue.poll(1, TimeUnit.SECONDS)
-        def resultB = clientB.queue.poll(1, TimeUnit.SECONDS) + clientB.queue.poll(1, TimeUnit.SECONDS)
-        def resultC = clientC.queue.poll(1, TimeUnit.SECONDS) + clientC.queue.poll(1, TimeUnit.SECONDS)
-        resultA.contains("testuserB") && resultA.contains("testuserC")
-        resultB.contains("testuserA") && resultB.contains("testuserC")
-        resultC.contains("testuserA") && resultC.contains("testuserB")
+        def resultA = clientA.queue.poll(1, TimeUnit.SECONDS) + clientA.queue.poll(1, TimeUnit.SECONDS) + clientA.queue.poll(1, TimeUnit.SECONDS)
+        def resultB = clientB.queue.poll(1, TimeUnit.SECONDS) + clientB.queue.poll(1, TimeUnit.SECONDS) + clientB.queue.poll(1, TimeUnit.SECONDS)
+        def resultC = clientC.queue.poll(1, TimeUnit.SECONDS) + clientC.queue.poll(1, TimeUnit.SECONDS) + clientC.queue.poll(1, TimeUnit.SECONDS)
+        resultA.contains("WRITE_MESSAGE_ACK") && resultA.contains("testuserB") && resultA.contains("testuserC")
+        resultB.contains("WRITE_MESSAGE_ACK") && resultB.contains("testuserA") && resultB.contains("testuserC")
+        resultC.contains("WRITE_MESSAGE_ACK") && resultC.contains("testuserA") && resultC.contains("testuserB")
 
         and:
         clientA.queue.isEmpty()
@@ -83,12 +88,18 @@ class WebSocketHandlerSpec extends Specification {
         clientC.queue.isEmpty()
 
         cleanup:
+        deleteMessage([resultA, resultB, resultC])
         unRegister(sessionIdA)
         unRegister(sessionIdB)
         unRegister(sessionIdC)
         clientA.session?.close()
         clientB.session?.close()
         clientC.session?.close()
+    }
+
+    def deleteMessage(List<String> results) {
+        def seqIds = results.collectMany { text -> (text =~ /"messageSeqId":(\d+)/).collect { it[1] } }
+        seqIds.forEach { messageRepository.deleteById(new ChannelSequenceId(1, it as Long)) }
     }
 
     def register(String username, String password) {

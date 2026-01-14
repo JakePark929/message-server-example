@@ -3,6 +3,7 @@ package com.jake.messagesystem.handler.websocket;
 import com.jake.messagesystem.constants.IdKey;
 import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.constants.ResultType;
+import com.jake.messagesystem.dto.ChannelEntry;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.EnterRequest;
 import com.jake.messagesystem.dto.websocket.outbound.EnterResponse;
@@ -29,9 +30,26 @@ public class EnterRequestHandler implements BaseRequestHandler<EnterRequest> {
     public void handleRequest(WebSocketSession senderSession, EnterRequest request) {
         final UserId senderUserId = (UserId) senderSession.getAttributes().get(IdKey.USER_ID.getValue());
 
-        final Pair<Optional<String>, ResultType> enter = channelService.enter(request.getChannelId(), senderUserId);
+        final Pair<Optional<ChannelEntry>, ResultType> enter = channelService.enter(request.getChannelId(), senderUserId);
         enter.getFirst().ifPresentOrElse(
-                title -> clientNotificationService.sendMessage(senderSession, senderUserId, new EnterResponse(request.getChannelId(), title)),
-                () -> clientNotificationService.sendMessage(senderSession, senderUserId, new ErrorResponse(MessageType.ENTER_REQUEST, enter.getSecond().getMessage())));
+                channelEntry -> clientNotificationService.sendMessage(
+                        senderSession,
+                        senderUserId,
+                        new EnterResponse(
+                                request.getChannelId(),
+                                channelEntry.title(),
+                                channelEntry.lastReadMessageSeqId(),
+                                channelEntry.lastChannelMessageSeqId()
+                        )
+                ),
+                () -> clientNotificationService.sendMessage(
+                        senderSession,
+                        senderUserId,
+                        new ErrorResponse(
+                                MessageType.ENTER_REQUEST,
+                                enter.getSecond().getMessage()
+                        )
+                )
+        );
     }
 }

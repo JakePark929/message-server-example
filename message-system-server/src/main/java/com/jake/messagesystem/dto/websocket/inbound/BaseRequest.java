@@ -10,6 +10,7 @@ import com.jake.messagesystem.constants.MessageType;
         @JsonSubTypes.Type(value = FetchChannelInviteCodeRequest.class, name = MessageType.FETCH_CHANNEL_INVITE_CODE_REQUEST),
         @JsonSubTypes.Type(value = FetchConnectionsRequest.class, name = MessageType.FETCH_CONNECTIONS_REQUEST),
         @JsonSubTypes.Type(value = FetchChannelsRequest.class, name = MessageType.FETCH_CHANNELS_REQUEST),
+        @JsonSubTypes.Type(value = FetchMessagesRequest.class, name = MessageType.FETCH_MESSAGES_REQUEST),
         @JsonSubTypes.Type(value = InviteRequest.class, name = MessageType.INVITE_REQUEST),
         @JsonSubTypes.Type(value = AcceptRequest.class, name = MessageType.ACCEPT_REQUEST),
         @JsonSubTypes.Type(value = RejectRequest.class, name = MessageType.REJECT_REQUEST),
@@ -20,6 +21,7 @@ import com.jake.messagesystem.constants.MessageType;
         @JsonSubTypes.Type(value = LeaveRequest.class, name = MessageType.LEAVE_REQUEST),
         @JsonSubTypes.Type(value = QuitRequest.class, name = MessageType.QUIT_REQUEST),
         @JsonSubTypes.Type(value = WriteMessage.class, name = MessageType.WRITE_MESSAGE),
+        @JsonSubTypes.Type(value = ReadMessageAck.class, name = MessageType.READ_MESSAGE_ACK),
         @JsonSubTypes.Type(value = KeepAlive.class, name = MessageType.KEEP_ALIVE)
 })
 public abstract class BaseRequest {

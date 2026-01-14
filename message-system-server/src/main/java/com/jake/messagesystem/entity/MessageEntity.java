@@ -2,20 +2,22 @@ package com.jake.messagesystem.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 
 import java.util.Objects;
 
 @Entity
-@Table(name="message")
+@Table(name = "message")
+@IdClass(ChannelSequenceId.class)
 public class MessageEntity extends BaseEntity {
+    @Id
+    @Column(name = "channel_id", nullable = false)
+    private Long channelId;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "message_sequence")
+    @Column(name = "message_sequence", nullable = false)
     private Long messageSequence;
 
     @Column(name = "user_id", nullable = false)
@@ -27,9 +29,15 @@ public class MessageEntity extends BaseEntity {
     public MessageEntity() {
     }
 
-    public MessageEntity(Long userId, String content) {
+    public MessageEntity(Long channelId, Long messageSequence, Long userId, String content) {
+        this.channelId = channelId;
+        this.messageSequence = messageSequence;
         this.userId = userId;
         this.content = content;
+    }
+
+    public Long getChannelId() {
+        return channelId;
     }
 
     public Long getMessageSequence() {
@@ -48,16 +56,16 @@ public class MessageEntity extends BaseEntity {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         final MessageEntity that = (MessageEntity) o;
-        return Objects.equals(messageSequence, that.messageSequence);
+        return Objects.equals(channelId, that.channelId) && Objects.equals(messageSequence, that.messageSequence);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(messageSequence);
+        return Objects.hash(channelId, messageSequence);
     }
 
     @Override
     public String toString() {
-        return "MessageEntity{messageSequence=%d, userId='%s', content='%s', createdAt=%s, updatedAt=%s}".formatted(messageSequence, userId, content, getCreatedAt(), getUpdatedAt());
+        return "MessageEntity{channelId=%d, messageSequence=%d, userId=%d, content='%s'}".formatted(channelId, messageSequence, userId, content);
     }
 }

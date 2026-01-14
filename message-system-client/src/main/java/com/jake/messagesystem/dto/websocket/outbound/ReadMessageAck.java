@@ -1,0 +1,38 @@
+package com.jake.messagesystem.dto.websocket.outbound;
+
+import com.jake.messagesystem.constants.MessageType;
+import com.jake.messagesystem.dto.ChannelId;
+import com.jake.messagesystem.dto.MessageSeqId;
+
+import java.util.Objects;
+
+public class ReadMessageAck extends BaseRequest {
+    private final ChannelId channelId;
+    private final MessageSeqId messageSeqId;
+
+    public ReadMessageAck(ChannelId channelId, MessageSeqId messageSeqId) {
+        super(MessageType.READ_MESSAGE_ACK);
+        this.channelId = channelId;
+        this.messageSeqId = messageSeqId;
+    }
+
+    public ChannelId getChannelId() {
+        return channelId;
+    }
+
+    public MessageSeqId getMessageSeqId() {
+        return messageSeqId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        final ReadMessageAck that = (ReadMessageAck) o;
+        return Objects.equals(channelId, that.channelId) && Objects.equals(messageSeqId, that.messageSeqId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(channelId, messageSeqId);
+    }
+}
