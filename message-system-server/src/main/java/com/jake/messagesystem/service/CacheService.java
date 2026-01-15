@@ -77,7 +77,7 @@ public class CacheService {
                 @Override
                 @SuppressWarnings("unchecked")
                 public <K, V> Object execute(@NonNull RedisOperations<K, V> operations) throws DataAccessException {
-                    map.forEach((key, value) -> operations.opsForValue().set((K) key, (V) value, ttlSeconds));
+                    map.forEach((key, value) -> operations.opsForValue().set((K) key, (V) value, ttlSeconds, TimeUnit.SECONDS));
                     return null;
                 }
             });
