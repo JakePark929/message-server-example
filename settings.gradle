@@ -6,7 +6,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "message-system-sharding"
+rootProject.name = "message-system-redis-cluster"
 
 include(
         "message-system-client",
