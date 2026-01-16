@@ -10,8 +10,6 @@ import com.jake.messagesystem.dto.kafka.outbound.MessageNotificationRecord;
 import com.jake.messagesystem.dto.projection.MessageInfoProjection;
 import com.jake.messagesystem.dto.websocket.outbound.BaseMessage;
 import com.jake.messagesystem.dto.websocket.outbound.WriteMessageAck;
-import com.jake.messagesystem.entity.MessageEntity;
-import com.jake.messagesystem.repository.MessageRepository;
 import com.jake.messagesystem.repository.UserChannelRepository;
 import com.jake.messagesystem.session.WebSocketSessionManager;
 import com.jake.messagesystem.util.JsonUtil;
@@ -39,7 +37,7 @@ public class MessageService {
     private final UserService userService;
     private final ChannelService channelService;
     private final PushService pushService;
-    private final MessageRepository messageRepository;
+    private final MessageShardService messageShardService;
     private final UserChannelRepository userChannelRepository;
 
     private final WebSocketSessionManager webSocketSessionManager;
@@ -48,11 +46,11 @@ public class MessageService {
     private static final int THREAD_POOL_SIZE = 10;
     private final ExecutorService senderThreadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
-    public MessageService(UserService userService, ChannelService channelService, PushService pushService, MessageRepository messageRepository, UserChannelRepository userChannelRepository, WebSocketSessionManager webSocketSessionManager, JsonUtil jsonUtil) {
+    public MessageService(UserService userService, ChannelService channelService, PushService pushService, MessageShardService messageShardService, UserChannelRepository userChannelRepository, WebSocketSessionManager webSocketSessionManager, JsonUtil jsonUtil) {
         this.userService = userService;
         this.channelService = channelService;
         this.pushService = pushService;
-        this.messageRepository = messageRepository;
+        this.messageShardService = messageShardService;
         this.userChannelRepository = userChannelRepository;
         this.webSocketSessionManager = webSocketSessionManager;
         this.jsonUtil = jsonUtil;
@@ -62,7 +60,7 @@ public class MessageService {
 
     @Transactional(readOnly = true)
     public Pair<List<Message>, ResultType> getMessages(ChannelId channelId, MessageSeqId startMessageSeqId, MessageSeqId endMessageSeqId) {
-        final List<MessageInfoProjection> messageInfos = messageRepository.findByChannelIdAndMessageSequenceBetween(channelId.id(), startMessageSeqId.id(), endMessageSeqId.id());
+        final List<MessageInfoProjection> messageInfos = messageShardService.findByChannelIdAndMessageSequenceBetween(channelId, startMessageSeqId, endMessageSeqId);
 
         final Set<UserId> userIds = messageInfos.stream().map(projection ->
                 new UserId(projection.getUserId())).collect(Collectors.toUnmodifiableSet()
@@ -103,7 +101,7 @@ public class MessageService {
 
         String payload = json.get();
         try {
-            messageRepository.save(new MessageEntity(channelId.id(), messageSeqId.id(), senderUserId.id(), content));
+            messageShardService.save(channelId, messageSeqId, senderUserId, content);
         } catch (Exception e) {
             log.error("Send message failed. cause: {}", e.getMessage());
 

@@ -2,6 +2,7 @@ package com.jake.messagesystem.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.jake.messagesystem.MessageSystemApplication
+import com.jake.messagesystem.db.ShardContext
 import com.jake.messagesystem.dto.ChannelId
 import com.jake.messagesystem.dto.UserId
 import com.jake.messagesystem.dto.websocket.inbound.WriteMessage
@@ -99,7 +100,9 @@ class WebSocketHandlerSpec extends Specification {
 
     def deleteMessage(List<String> results) {
         def seqIds = results.collectMany { text -> (text =~ /"messageSeqId":(\d+)/).collect { it[1] } }
-        seqIds.forEach { messageRepository.deleteById(new ChannelSequenceId(1, it as Long)) }
+        try (ShardContext.ShardContextScope ignored = new ShardContext.ShardContextScope(1)) {
+            seqIds.forEach { messageRepository.deleteById(new ChannelSequenceId(1, it as Long)) }
+        }
     }
 
     def register(String username, String password) {

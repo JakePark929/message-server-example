@@ -13,7 +13,6 @@ import com.jake.messagesystem.dto.projection.ChannelTitleProjection;
 import com.jake.messagesystem.entity.ChannelEntity;
 import com.jake.messagesystem.entity.UserChannelEntity;
 import com.jake.messagesystem.repository.ChannelRepository;
-import com.jake.messagesystem.repository.MessageRepository;
 import com.jake.messagesystem.repository.UserChannelRepository;
 import com.jake.messagesystem.util.JsonUtil;
 import jakarta.persistence.EntityNotFoundException;
@@ -34,22 +33,22 @@ public class ChannelService {
     private static final long TTL = 600;
     private final SessionService sessionService;
     private final UserConnectionService userConnectionService;
+    private final MessageShardService messageShardService;
     private final ChannelRepository channelRepository;
     private final UserChannelRepository userChannelRepository;
     private final CacheService cacheService;
 
     private static final int LIMIT_HEAD_COUNT = 100;
     private final JsonUtil jsonUtil;
-    private final MessageRepository messageRepository;
 
-    public ChannelService(CacheService cacheService, SessionService sessionService, UserConnectionService userConnectionService, ChannelRepository channelRepository, UserChannelRepository userChannelRepository, JsonUtil jsonUtil, MessageRepository messageRepository) {
+    public ChannelService(CacheService cacheService, SessionService sessionService, UserConnectionService userConnectionService, MessageShardService messageShardService, ChannelRepository channelRepository, UserChannelRepository userChannelRepository, JsonUtil jsonUtil) {
         this.cacheService = cacheService;
         this.sessionService = sessionService;
         this.userConnectionService = userConnectionService;
+        this.messageShardService = messageShardService;
         this.channelRepository = channelRepository;
         this.userChannelRepository = userChannelRepository;
         this.jsonUtil = jsonUtil;
-        this.messageRepository = messageRepository;
     }
 
     @Transactional(readOnly = true)
@@ -255,9 +254,7 @@ public class ChannelService {
             return Pair.of(Optional.empty(), ResultType.NOT_FOUND);
         }
 
-        final MessageSeqId lastChannelmessageSeqId = messageRepository.findLastMessageSequenceByChannelId(channelId.id())
-                .map(MessageSeqId::new)
-                .orElse(new MessageSeqId(0L));
+        final MessageSeqId lastChannelmessageSeqId = messageShardService.findLastMessageSequenceByChannelId(channelId);
 
         if (sessionService.setActiveChannel(userId, channelId)) {
 
