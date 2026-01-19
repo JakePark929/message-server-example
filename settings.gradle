@@ -6,7 +6,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "message-system-redis-cluster"
+rootProject.name = "message-system-connection"
 
 include(
         "message-system-client",
