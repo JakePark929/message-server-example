@@ -2,16 +2,17 @@ package com.jake.messagesystem.service;
 
 import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.dto.UserId;
-import com.jake.messagesystem.dto.kafka.outbound.AcceptNotificationRecord;
-import com.jake.messagesystem.dto.kafka.outbound.AcceptResponseRecord;
-import com.jake.messagesystem.dto.kafka.outbound.CreateResponseRecord;
-import com.jake.messagesystem.dto.kafka.outbound.DisconnectResponseRecord;
-import com.jake.messagesystem.dto.kafka.outbound.InviteNotificationRecord;
-import com.jake.messagesystem.dto.kafka.outbound.InviteResponseRecord;
-import com.jake.messagesystem.dto.kafka.outbound.JoinNotificationRecord;
-import com.jake.messagesystem.dto.kafka.outbound.LeaveResponseRecord;
-import com.jake.messagesystem.dto.kafka.outbound.QuitResponseRecord;
-import com.jake.messagesystem.dto.kafka.outbound.RejectResponseRecord;
+import com.jake.messagesystem.dto.kafka.AcceptNotificationRecord;
+import com.jake.messagesystem.dto.kafka.AcceptResponseRecord;
+import com.jake.messagesystem.dto.kafka.CreateResponseRecord;
+import com.jake.messagesystem.dto.kafka.DisconnectResponseRecord;
+import com.jake.messagesystem.dto.kafka.InviteNotificationRecord;
+import com.jake.messagesystem.dto.kafka.InviteResponseRecord;
+import com.jake.messagesystem.dto.kafka.JoinNotificationRecord;
+import com.jake.messagesystem.dto.kafka.LeaveResponseRecord;
+import com.jake.messagesystem.dto.kafka.QuitResponseRecord;
+import com.jake.messagesystem.dto.kafka.RecordInterface;
+import com.jake.messagesystem.dto.kafka.RejectResponseRecord;
 import com.jake.messagesystem.dto.websocket.outbound.BaseMessage;
 import com.jake.messagesystem.session.WebSocketSessionManager;
 import com.jake.messagesystem.util.JsonUtil;
@@ -47,15 +48,15 @@ public class ClientNotificationService {
         pushService.registerPushMessageType(MessageType.QUIT_RESPONSE, QuitResponseRecord.class);
     }
 
-    public void sendMessage(WebSocketSession session, UserId userId, BaseMessage message) {
-        sendPayload(session, userId, message);
+    public void sendErrorMessage(WebSocketSession session, BaseMessage message) {
+        sendPayload(session, message, null);
     }
 
-    public void sendMessage(UserId userId, BaseMessage message) {
-        sendPayload(webSocketSessionManager.getSession(userId), userId, message);
+    public void sendMessage(UserId userId, BaseMessage message, RecordInterface recordInterface) {
+        sendPayload(webSocketSessionManager.getSession(userId), message, recordInterface);
     }
 
-    private void sendPayload(WebSocketSession session, UserId userId, BaseMessage message) {
+    private void sendPayload(WebSocketSession session, BaseMessage message, RecordInterface recordInterface) {
         final Optional<String> json = jsonUtil.toJson(message);
         if (json.isEmpty()) {
             log.error("Send message failed. messageType: {}", message.getType());
@@ -64,14 +65,21 @@ public class ClientNotificationService {
         }
 
         String payload = json.get();
+
+        final Runnable pushMessage = () -> {
+            if (recordInterface != null) {
+                pushService.pushMessage(recordInterface);
+            }
+        };
+
         try {
             if (session != null) {
                 webSocketSessionManager.sendMessage(session, payload);
             } else {
-                pushService.pushMessage(userId, message.getType(), payload);
+                pushMessage.run();
             }
         } catch (Exception e) {
-            pushService.pushMessage(userId, message.getType(), payload);
+            pushMessage.run();
         }
     }
 }

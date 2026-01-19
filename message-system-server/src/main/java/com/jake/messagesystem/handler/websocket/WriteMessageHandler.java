@@ -1,42 +1,49 @@
 package com.jake.messagesystem.handler.websocket;
 
 import com.jake.messagesystem.constants.IdKey;
+import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.dto.ChannelId;
 import com.jake.messagesystem.dto.UserId;
+import com.jake.messagesystem.dto.kafka.WriteMessageRecord;
 import com.jake.messagesystem.dto.websocket.inbound.WriteMessage;
-import com.jake.messagesystem.dto.websocket.outbound.MessageNotification;
+import com.jake.messagesystem.dto.websocket.outbound.ErrorResponse;
+import com.jake.messagesystem.kafka.KafkaProducer;
+import com.jake.messagesystem.service.ClientNotificationService;
 import com.jake.messagesystem.service.MessageSeqIdGenerator;
-import com.jake.messagesystem.service.MessageService;
-import com.jake.messagesystem.service.UserService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
 @Component
 public class WriteMessageHandler implements BaseRequestHandler<WriteMessage> {
-    private final UserService userService;
-    private final MessageService messageService;
-
+    private final KafkaProducer kafkaProducer;
     private final MessageSeqIdGenerator messageSeqIdGenerator;
 
-    public WriteMessageHandler(UserService userService, MessageService messageService, MessageSeqIdGenerator messageSeqIdGenerator) {
-        this.userService = userService;
-        this.messageService = messageService;
+    private final ClientNotificationService clientNotificationService;
+
+    public WriteMessageHandler(KafkaProducer kafkaProducer, MessageSeqIdGenerator messageSeqIdGenerator, ClientNotificationService clientNotificationService) {
+        this.kafkaProducer = kafkaProducer;
         this.messageSeqIdGenerator = messageSeqIdGenerator;
+        this.clientNotificationService = clientNotificationService;
     }
 
     @Override
     public void handleRequest(WebSocketSession senderSession, WriteMessage request) {
         final UserId senderUserId = (UserId) senderSession.getAttributes().get(IdKey.USER_ID.getValue());
         ChannelId channelId = request.getChannelId();
-        String content = request.getContent();
-        String senderUsername = userService.getUserName(senderUserId).orElse("unknown");
-        messageSeqIdGenerator.getNext(channelId).ifPresent(messageSeqId -> messageService.sendMessage(
-                senderUserId,
-                content,
-                channelId,
-                messageSeqId,
-                request.getSerial(),
-                new MessageNotification(channelId, messageSeqId, senderUsername, content)
-        ));
+
+        Runnable errorCallback = () -> clientNotificationService.sendErrorMessage(
+                senderSession,
+                new ErrorResponse(MessageType.WRITE_MESSAGE, "Write message failed.")
+        );
+
+        messageSeqIdGenerator.getNext(channelId).ifPresentOrElse(messageSeqId ->
+                kafkaProducer.sendMessageUsingPartitionKey(
+                        channelId,
+                        senderUserId,
+                        new WriteMessageRecord(senderUserId, request.getSerial(), channelId, request.getContent(), messageSeqId),
+                        errorCallback
+                ),
+                errorCallback
+        );
     }
 }
