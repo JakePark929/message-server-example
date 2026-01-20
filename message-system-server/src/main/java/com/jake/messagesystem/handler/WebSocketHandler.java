@@ -4,6 +4,7 @@ import com.jake.messagesystem.constants.IdKey;
 import com.jake.messagesystem.dto.UserId;
 import com.jake.messagesystem.dto.websocket.inbound.BaseRequest;
 import com.jake.messagesystem.handler.websocket.RequestDispatcher;
+import com.jake.messagesystem.service.SessionService;
 import com.jake.messagesystem.session.WebSocketSessionManager;
 import com.jake.messagesystem.util.JsonUtil;
 import org.slf4j.Logger;
@@ -24,10 +25,13 @@ public class WebSocketHandler extends TextWebSocketHandler {
     private final WebSocketSessionManager webSocketSessionManager;
     private final RequestDispatcher requestDispatcher;
 
-    public WebSocketHandler(JsonUtil jsonUtil, WebSocketSessionManager webSocketSessionManager, RequestDispatcher requestDispatcher) {
+    private final SessionService sessionService;
+
+    public WebSocketHandler(JsonUtil jsonUtil, WebSocketSessionManager webSocketSessionManager, RequestDispatcher requestDispatcher, SessionService sessionService) {
         this.jsonUtil = jsonUtil;
         this.webSocketSessionManager = webSocketSessionManager;
         this.requestDispatcher = requestDispatcher;
+        this.sessionService = sessionService;
     }
 
     @Override
@@ -37,6 +41,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         ConcurrentWebSocketSessionDecorator concurrentWebSocketSessionDecorator = new ConcurrentWebSocketSessionDecorator(session, 5000, 100 * 1024);
         final UserId userId = (UserId) session.getAttributes().get(IdKey.USER_ID.getValue());
         webSocketSessionManager.putSession(userId, concurrentWebSocketSessionDecorator);
+        sessionService.setOnline(userId, true);
     }
 
     @Override
@@ -45,6 +50,8 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
         final UserId userId = (UserId) session.getAttributes().get(IdKey.USER_ID.getValue());
         webSocketSessionManager.closeSession(userId);
+        sessionService.setOnline(userId, false);
+        sessionService.removeActiveChannel(userId);
     }
 
     @Override
@@ -53,6 +60,8 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
         final UserId userId = (UserId) session.getAttributes().get(IdKey.USER_ID.getValue());
         webSocketSessionManager.closeSession(userId);
+        sessionService.setOnline(userId, false);
+        sessionService.removeActiveChannel(userId);
     }
 
     @Override

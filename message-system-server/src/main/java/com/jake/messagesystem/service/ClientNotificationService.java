@@ -65,7 +65,6 @@ public class ClientNotificationService {
         }
 
         String payload = json.get();
-
         final Runnable pushMessage = () -> {
             if (recordInterface != null) {
                 pushService.pushMessage(recordInterface);

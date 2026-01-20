@@ -6,7 +6,8 @@ import com.jake.messagesystem.dto.MessageSeqId;
 import com.jake.messagesystem.dto.UserId;
 
 public record ReadMessageAckRecord(
-        UserId userId, ChannelId channelId,
+        UserId userId,
+        ChannelId channelId,
         MessageSeqId messageSeqId
 ) implements RecordInterface {
     @Override
