@@ -6,11 +6,12 @@ pluginManagement {
     }
 }
 
-rootProject.name = "message-system-redis-cluster"
+rootProject.name = "message-system-message"
 
 include(
         "message-system-client",
         "message-system-auth-server",
         "message-system-push-server",
-        "message-system-server"
+        "message-system-message-server",
+        "message-system-connection-server"
 )

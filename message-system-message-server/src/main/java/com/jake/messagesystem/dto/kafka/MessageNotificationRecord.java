@@ -1,6 +1,6 @@
-package com.jake.messagesystem.dto.kafka.inbound;
+package com.jake.messagesystem.dto.kafka;
 
-import com.jake.messagesystem.constant.MessageType;
+import com.jake.messagesystem.constants.MessageType;
 import com.jake.messagesystem.dto.ChannelId;
 import com.jake.messagesystem.dto.MessageSeqId;
 import com.jake.messagesystem.dto.UserId;
