@@ -138,7 +138,7 @@ public class ChannelService {
 
             return jsonUtil.fromJsonToList(cachedParticipantIds.get(), String.class).stream()
                     .map(userId -> new UserId(Long.valueOf(userId)))
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         final List<UserId> fromDb = userChannelRepository.findUserIdsByChannelId(channelId.id()).stream()
