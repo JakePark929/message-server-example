@@ -13,5 +13,5 @@ include(
         "message-system-auth-server",
         "message-system-push-server",
         "message-system-message-server",
-        "message-system-server"
+        "message-system-connection-server"
 )
