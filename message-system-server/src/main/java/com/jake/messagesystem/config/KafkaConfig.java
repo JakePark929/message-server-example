@@ -1,5 +1,6 @@
 package com.jake.messagesystem.config;
 
+import com.jake.messagesystem.kafka.KafkaConsumerAwareRebalanceListener;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
@@ -7,9 +8,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.ContainerProperties;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +33,24 @@ public class KafkaConfig {
         configs.put(AdminClientConfig.RETRY_BACKOFF_MS_CONFIG, 1000);
 
         return new KafkaAdmin(configs);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
+            ConsumerFactory<String, String> consumerFactory,
+            KafkaConsumerAwareRebalanceListener awareRebalancedListener
+    ) {
+        ConcurrentKafkaListenerContainerFactory<String, String> containerFactory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        containerFactory.setConsumerFactory(consumerFactory);
+        containerFactory
+                .getContainerProperties()
+                .setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+        containerFactory.getContainerProperties().setConsumerRebalanceListener(awareRebalancedListener);
+
+        log.info("Set AckMode: {}", containerFactory.getContainerProperties().getAckMode());
+
+        return containerFactory;
     }
 
     @Bean

@@ -39,14 +39,14 @@ public class KafkaProducer {
 
     public void sendRequest(RecordInterface recordInterface, Runnable errorCallback) {
         jsonUtil.toJson(recordInterface).ifPresent(record ->
-                kafkaTemplate.send(pushTopic, record).whenComplete(logResult(pushTopic, record, null, errorCallback))
+                kafkaTemplate.send(requestTopic, record).whenComplete(logResult(requestTopic, record, null, errorCallback))
         );
     }
 
     public void sendMessageUsingPartitionKey(ChannelId channelId, UserId userId, RecordInterface recordInterface, Runnable errorCallback) {
         String partitionKey = "%d-%d".formatted(channelId.id(), userId.id());
         jsonUtil.toJson(recordInterface).ifPresent(record ->
-                kafkaTemplate.send(pushTopic, partitionKey, record).whenComplete(logResult(pushTopic, record, partitionKey, errorCallback))
+                kafkaTemplate.send(messageTopic, partitionKey, record).whenComplete(logResult(messageTopic, record, partitionKey, errorCallback))
         );
     }
 
@@ -70,7 +70,7 @@ public class KafkaProducer {
                         "Record producing failed: {} with key: {} to topic: {}, cause: {}",
                         record,
                         partitionKey,
-                        pushTopic,
+                        topic,
                         throwable.getMessage()
                 );
 
