@@ -7,7 +7,7 @@
 
 ### 실행 화면
 
-![message-system](/data/message-system.gif)
+![message-system](/data/images/message-system.gif)
 
 ## 🧑‍💻 Tech Stack
 
@@ -16,7 +16,7 @@
 | Common | - Java 17.0.13 (Eclipse Temurin)                                                                |
 | Client | - JLine 3.28.0 (CLI 클라이언트) <br/> - Tyrus 2.2.0 (WebSocket Engine)                               |
 | Server | - SpringBoot 3.4.11 (LTS) <br/> - Spring Security <br/> - WebSocket <br/> - Spock 4 (테스트 프레임워크) |
-| Infra  | - MySQL 8.0.40 (RDB) <br/> - Redis 7.4.1                                                        |
+| Infra  | - MySQL 8.0.40 (RDB) <br/> - Redis 7.4.1  <br/> - Kafka 3.9.0                                   |
 
 > Tyrus = Jakarta WebSocket(JSR 356)의 표준 구현체
 
@@ -28,17 +28,20 @@ message-system/
 ├── message-system-client/ # 클라이언트 모듈
 ├── message-system-auth-server/ # 인증 서버
 ├── message-system-push-server/ # 푸시 알림 서버
-├── message-system-server/ # 메세지 서버
+├── message-system-message-server/ # 메세지 서버
+├── message-system-connection-server/ # 커넥션 서버
 ```
 
 ### Server Architecture
 
-#### 모놀리식 아키텍처 (기존)
-![모놀리식 아키텍처](./data/monolith-architecture.png)
+#### [기존] 모놀리식 아키텍처
+![모놀리식 아키텍처](data/images/monolith-architecture.png)
 
+#### [변경] 인증 및 알림서버 분리 
+![인증 분리 아키텍처](data/images/distributed-architecture.png)
 
-#### 인증 및 알림서버 분리 
-![인증 분리 아키텍처](./data/distributed-architecture.png)
+#### [최종] 커넥션-메세지서버 분리 및 양방향 통신
+![양방향 메세지 분리 아키텍처](data/images/2-way-kafka-architecture.png)
 
 ### 📄 Server API Spec
 
@@ -95,6 +98,10 @@ $ /exit : 로그아웃 후 종료
 ---
 
 # 📖 메세징 서버 관련 지식
+
+## 카프카기반 양방향 분리 설계
+
+## 데이터 베이스 샤딩 및 레디스 클러스터링
 
 ## 비관적 락(Pessimistic Lock) 적용 및 동시성 제어 설계
 
