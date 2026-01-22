@@ -1,10 +1,10 @@
 server:
-  port: 8090
+  port: ${SERVER_PORT}
   id: ${SERVER_ID}
 
 spring:
   application:
-    name: message-system-server
+    name: message-system-connection-server
   data:
     redis:
       cluster:

@@ -1,5 +1,8 @@
 package com.jake.messagesystem.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jake.messagesystem.dto.ServerEndpoint;
 import com.jake.messagesystem.dto.rest.req.LoginRequest;
 import com.jake.messagesystem.dto.rest.req.UserRegisterRequest;
 import com.jake.messagesystem.util.JsonUtil;
@@ -9,16 +12,23 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public class RestApiService {
     private final TerminalService terminalService;
-    private final String url;
+    private final List<ServerEndpoint> serverEndpoints = new ArrayList<>();
     private String sessionId = "";
 
-    public RestApiService(TerminalService terminalService, String url) {
+    public RestApiService(TerminalService terminalService, List<String> serviceDiscoveryUrls, String path) {
         this.terminalService = terminalService;
-        this.url = "http://" + url;
+        prepareServerEndpoints(serviceDiscoveryUrls, path);
+    }
+
+    public List<ServerEndpoint> getServerEndpoints() {
+        return serverEndpoints;
     }
 
     public String getSessionId() {
@@ -27,7 +37,7 @@ public class RestApiService {
 
     public boolean register(String username, String password) {
 
-        return request("/api/v1/auth/register", "", new UserRegisterRequest(username, password))
+        return requestWithRetry("/api/v1/auth/register", "", new UserRegisterRequest(username, password))
                 .map(httpResponse -> httpResponse.statusCode() == HttpStatus.OK_200.getStatusCode())
                 .orElse(false);
     }
@@ -39,14 +49,14 @@ public class RestApiService {
 
         terminalService.printSystemMessage("Unregistering " + sessionId);
 
-        return request("/api/v1/auth/unregister", sessionId, null)
+        return requestWithRetry("/api/v1/auth/unregister", sessionId, null)
                 .filter(httpResponse -> httpResponse.statusCode() == HttpStatus.OK_200.getStatusCode())
                 .isPresent();
     }
 
     public boolean login(String username, String password) {
 
-        return request("/api/v1/auth/login", "", new LoginRequest(username, password))
+        return requestWithRetry("/api/v1/auth/login", "", new LoginRequest(username, password))
                 .map(httpResponse -> {
                     if (httpResponse.statusCode() == HttpStatus.OK_200.getStatusCode()) {
                         sessionId = httpResponse.body();
@@ -64,13 +74,29 @@ public class RestApiService {
             return false;
         }
 
-        return request("/api/v1/auth/logout", sessionId, null)
+        return requestWithRetry("/api/v1/auth/logout", sessionId, null)
                 .filter(httpResponse -> httpResponse.statusCode() == HttpStatus.OK_200.getStatusCode())
                 .isPresent();
     }
 
-    private Optional<HttpResponse<String>> request(String path, String sessionId, Object requestObject) {
+    private Optional<HttpResponse<String>> requestWithRetry(String path, String sessionId, Object requestObject) {
+        for (ServerEndpoint serverEndpoint : serverEndpoints) {
+            try {
+
+                return request(serverEndpoint, path, sessionId, requestObject);
+            } catch (Exception e) {
+                terminalService.printSystemMessage("Retry with the next server node.");
+            }
+        }
+
+        terminalService.printSystemMessage("Request failed.");
+
+        return Optional.empty();
+    }
+
+    private Optional<HttpResponse<String>> request(ServerEndpoint serverEndpoint, String path, String sessionId, Object requestObject) throws Exception {
         try {
+            String url = "http://%s:%s".formatted(serverEndpoint.address(), serverEndpoint.port());
             HttpRequest.Builder builder = HttpRequest.newBuilder().uri(new URI(url + path)).header("Content-Type", "application/json");
 
             if (!sessionId.isEmpty()) {
@@ -90,7 +116,41 @@ public class RestApiService {
         } catch (Exception e) {
             terminalService.printSystemMessage("API call failed. cause: %s".formatted(e.getMessage()));
 
-            return Optional.empty();
+            throw e;
+        }
+    }
+
+    private void prepareServerEndpoints(List<String> serviceDiscoveryUrls, String path) {
+        for (String serviceDiscoveryUrl : serviceDiscoveryUrls) {
+            try {
+                prepareServerEndpoints("http://%s%s".formatted(serviceDiscoveryUrl, path));
+
+                return;
+            } catch (Exception e) {
+                terminalService.printSystemMessage("Retry with the next discovery node.");
+            }
+        }
+    }
+
+    private void prepareServerEndpoints(String serviceDiscoveryUrl) throws Exception {
+        try {
+            HttpRequest.Builder builder = HttpRequest.newBuilder().uri(new URI(serviceDiscoveryUrl)).GET();
+            final HttpResponse<String> httpResponse = HttpClient.newHttpClient().send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode nodes = mapper.readTree(httpResponse.body());
+            for (JsonNode node : nodes) {
+                final String serviceAddress = node.get("ServiceAddress").asText();
+                final String servicePort = node.get("ServicePort").asText();
+                serverEndpoints.add(new ServerEndpoint(serviceAddress, servicePort));
+            }
+
+            Collections.shuffle(serverEndpoints);
+            terminalService.printSystemMessage("Discovery serverEndpoints=%s".formatted(serverEndpoints.toString()));
+        } catch (Exception e) {
+            terminalService.printSystemMessage("Discovery api call failed. cause: %s".formatted(e.getMessage()));
+
+            throw e;
         }
     }
 }

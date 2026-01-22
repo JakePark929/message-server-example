@@ -5,7 +5,7 @@ import org.springframework.test.context.TestPropertySource
 import spock.lang.Specification
 
 @SpringBootTest(classes = MessageSystemApplication)
-@TestPropertySource(properties =  "server.id=test")
+@TestPropertySource(properties = ["SERVER_PORT=8090", "server.id=test"])
 class MessageSystemApplicationSpec extends Specification {
 
     void contextLoads() {

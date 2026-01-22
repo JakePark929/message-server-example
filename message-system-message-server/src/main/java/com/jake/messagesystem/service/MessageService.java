@@ -120,21 +120,21 @@ public class MessageService {
                                 new WriteMessageAckRecord(senderUserId, record.serial(), messageSeqId)
                         );
                         participantIds.remove(senderUserId);
+                    } else {
+                        kafkaProducer.sendMessageUsingPartitionKey(
+                                listenTopic,
+                                channelId,
+                                senderUserId,
+                                new MessageNotificationRecord(
+                                        senderUserId,
+                                        channelId,
+                                        messageSeqId,
+                                        senderUsername,
+                                        record.content(),
+                                        participantIds
+                                )
+                        );
                     }
-
-                    kafkaProducer.sendMessageUsingPartitionKey(
-                            listenTopic,
-                            channelId,
-                            senderUserId,
-                            new MessageNotificationRecord(
-                                    senderUserId,
-                                    channelId,
-                                    messageSeqId,
-                                    senderUsername,
-                                    record.content(),
-                                    participantIds
-                            )
-                    );
                 }
         );
 
